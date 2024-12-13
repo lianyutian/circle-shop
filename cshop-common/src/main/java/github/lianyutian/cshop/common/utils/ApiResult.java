@@ -21,10 +21,12 @@ public class ApiResult<T> {
      * 接口响应状态码 0 表示成功 其他表示失败
      */
     private Integer code;
+
     /**
      * 数据
      */
     private T data;
+
     /**
      * 描述
      */

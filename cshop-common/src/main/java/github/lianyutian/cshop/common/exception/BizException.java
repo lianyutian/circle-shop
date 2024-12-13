@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * 统一异常处理
+ * 业务异常
  *
  * @author lianyutian
  * @since 2024-12-13 13:54:35

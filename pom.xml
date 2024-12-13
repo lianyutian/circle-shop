@@ -19,12 +19,15 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
+        <!-- 版本匹配说明 -->
+        <!-- https://sca.aliyun.com/docs/2023/overview/version-explain/?spm=5176.29160081.0.0.74805c72WoVfdt -->
         <!-- 指定 SpringBoot 版本  -->
         <spring.boot.version>3.2.4</spring.boot.version>
         <!-- 指定 SpringCloud 版本 -->
         <spring.cloud.version>2023.0.1</spring.cloud.version>
         <!-- 指定 SpringCloudAlibaba 版本 -->
         <alibaba.cloud.version>2023.0.1.0</alibaba.cloud.version>
+
         <!-- 指定 lombok 版本 -->
         <lombok.version>1.18.26</lombok.version>
 
