@@ -31,6 +31,7 @@ public class BizException extends RuntimeException {
 
     /**
      * 根据 code、message 返回异常信息
+     *
      * @param code 错误码
      * @param message 异常消息
      */
@@ -51,6 +52,7 @@ public class BizException extends RuntimeException {
 
     /**
      * 根据 errMsg 返回异常信息
+     *
      * @param errorMsg 错误信息
      */
     public BizException(String errorMsg) {

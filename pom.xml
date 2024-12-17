@@ -30,6 +30,8 @@
 
         <!-- 指定 lombok 版本 -->
         <lombok.version>1.18.26</lombok.version>
+        <!-- 图形验证码 kaptcha 版本 -->
+        <kaptcha.version>2.3.2</kaptcha.version>
 
     </properties>
 
@@ -60,6 +62,11 @@
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
                 <version>${lombok.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.penggle</groupId>
+                <artifactId>kaptcha</artifactId>
+                <version>${kaptcha.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
