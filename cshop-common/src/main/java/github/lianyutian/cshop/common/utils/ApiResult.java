@@ -36,7 +36,7 @@ public class ApiResult<T> {
      * 成功响应
      * @return @see ApiResult
      */
-    public static ApiResult<String> success() {
+    public static <T> ApiResult<T> success() {
         return new ApiResult<>(0, null, null);
     }
 
@@ -54,7 +54,7 @@ public class ApiResult<T> {
      * @param code 状态码
      * @return @see ApiResult
      */
-    public static ApiResult<String> error(Integer code, String msg) {
+    public static <T> ApiResult<T> error(Integer code, String msg) {
         return new ApiResult<>(code, null, msg);
     }
 
@@ -64,7 +64,7 @@ public class ApiResult<T> {
      * @param msg 错误信息
      * @return @see ApiResult
      */
-    public static ApiResult<String> buildResult(int code, String msg) {
+    public static <T> ApiResult<T> buildResult(int code, String msg) {
         return new ApiResult<>(code, null, msg);
     }
 
@@ -73,7 +73,7 @@ public class ApiResult<T> {
      * @param bizCodeEnums 业务枚举状态码
      * @return @see ApiResult
      */
-    public static ApiResult<String> buildResult(BizCodeEnums bizCodeEnums) {
+    public static <T> ApiResult<T> result(BizCodeEnums bizCodeEnums) {
         return ApiResult.buildResult(bizCodeEnums.getCode(), bizCodeEnums.getMessage());
     }
 }

@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @version 1.0
  */
 @RestController
-@RequestMapping("user")
+@RequestMapping("/api/user/v1")
 public class UserController {
     @PostMapping("test")
     public ApiResult<String> test() {
