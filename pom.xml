@@ -32,6 +32,12 @@
         <lombok.version>1.18.26</lombok.version>
         <!-- 图形验证码 kaptcha 版本 -->
         <kaptcha.version>2.3.2</kaptcha.version>
+        <!-- 腾讯云 java sdk 版本 -->
+        <tencentcloud-sdk-java.version>3.1.1000</tencentcloud-sdk-java.version>
+        <!-- 阿里云短信 sdk 版本 -->
+        <alibabacloud.dysmsapi.version>3.0.1</alibabacloud.dysmsapi.version>
+        <!-- 通用工具包版本 -->
+        <commons-lang3.version>3.14.0</commons-lang3.version>
 
     </properties>
 
@@ -68,14 +74,43 @@
                 <artifactId>kaptcha</artifactId>
                 <version>${kaptcha.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.tencentcloudapi</groupId>
+                <artifactId>tencentcloud-sdk-java</artifactId>
+                <!-- go to https://search.maven.org/search?q=tencentcloud-sdk-java and get the latest version. -->
+                <!-- 请到https://search.maven.org/search?q=tencentcloud-sdk-java查询所有版本，最新版本如下 -->
+                <version>${tencentcloud-sdk-java.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.aliyun</groupId>
+                <artifactId>alibabacloud-dysmsapi20170525</artifactId>
+                <version>${alibabacloud.dysmsapi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${commons-lang3.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
-    <!-- 加快代码库下载， 这里使用阿里云镜像仓库-->
+    <!-- 加快代码库下载 -->
     <repositories>
         <repository>
             <id>maven-ali</id>
-            <url>http://maven.aliyun.com/nexus/content/groups/public//</url>
+            <url>http://maven.aliyun.com/nexus/content/groups/public/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+                <checksumPolicy>fail</checksumPolicy>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>maven-tencent</id>
+            <url>https://mirrors.tencent.com/nexus/repository/maven-public/</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
@@ -88,9 +123,20 @@
     </repositories>
     <pluginRepositories>
         <pluginRepository>
-            <id>public</id>
+            <id>aliyun</id>
             <name>aliyun nexus</name>
             <url>http://maven.aliyun.com/nexus/content/groups/public/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </pluginRepository>
+        <pluginRepository>
+            <id>tencentcloud</id>
+            <name>tencentcloud nexus</name>
+            <url>https://mirrors.tencent.com/nexus/repository/maven-public/</url>
             <releases>
                 <enabled>true</enabled>
             </releases>

@@ -27,10 +27,14 @@ public enum BizCodeEnums {
      * 用户微服务验证码相关  2101 开头
      */
     USER_PHONE_ERROR(2101001, "手机号不合法"),
-    USER_CODE_FAST_LIMITED(2101002, "验证码发送太快了"),
+    USER_CODE_FAST_LIMITED(2101002, "验证码已发送，请稍后再发"),
     USER_CODE_PHONE_ERROR(2101003, "手机验证码错误"),
     USER_CODE_CAPTCHA_ERROR(2101004, "图形验证码错误"),
     USER_CODE_EMAIL_ERROR(2101005, "邮箱验证码错误"),
+    USER_CODE_SMS_ERROR(2101006, "短信验证码错误"),
+    USER_CODE_SMS_SEND_ERROR(2101006, "短信发送失败请稍后重试"),
+    USER_CODE_SMS_SEND_REPLICATE_ERROR(2101007, "短信验证码已发送请稍后重试"),
+    USER_CODE_SEND_ERROR(2101008, "验证码发送失败，请稍后重试"),
 
     /**
      * 用户微服务账号相关 2102 开头

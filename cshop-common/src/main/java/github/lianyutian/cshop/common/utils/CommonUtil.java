@@ -90,4 +90,29 @@ public class CommonUtil {
             throw new RuntimeException("Failed to create MD5 digest", e);
         }
     }
+
+    /**
+     * 生成指定长度的数字验证码
+     *
+     * @param length 验证码的长度
+     * @return 生成的数字验证码
+     */
+    public static String getRandomCode(int length) {
+        String numbers = "0123456789";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < length; i++) {
+            int index = (int) (Math.random() * numbers.length());
+            sb.append(numbers.charAt(index));
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 获取当前时间戳
+     *
+     * @return 当前时间戳
+     */
+    public static long getCurrentTimestamp(){
+        return System.currentTimeMillis();
+    }
 }
