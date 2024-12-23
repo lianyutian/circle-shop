@@ -20,8 +20,8 @@ spring:
           max-wait: 60000      # 最大等待时间，单位是毫秒
 sms:
   aliyun:
-    secretId: LTAI5tFLdMPfmz8AKPWkBR2u
-    secretKey: ZB3kAN9VBYT4gBFPURkcet7Ew1en3d
+    secretId: xxx
+    secretKey: xxx
     signName: CircleShop商城
   tencent:
     secretId: xxx
@@ -32,6 +32,12 @@ sms:
     templateId:
       aliyun: SMS_476800055
       tencentcloud: xxx
+oss:
+  aliyun:
+    secretId: xxx
+    secretKey: xxx
+    bucketName: xxx
+    endPoint: oss-cn-shenzhen.aliyuncs.com
 
 # 设置日志级别：ERROR/WARN/INFO/DEBUG,默认是 INFO 以上才显示
 logging:

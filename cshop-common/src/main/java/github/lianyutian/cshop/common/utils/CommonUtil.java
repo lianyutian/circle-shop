@@ -8,6 +8,7 @@ import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.UUID;
 
 /**
  * 通用工具类
@@ -114,5 +115,14 @@ public class CommonUtil {
      */
     public static long getCurrentTimestamp(){
         return System.currentTimeMillis();
+    }
+
+    /**
+     * 生成 UUID
+     *
+     * @return 生成的 UUID 字符串
+     */
+    public static String generateUUID() {
+        return UUID.randomUUID().toString().replace("-", "");
     }
 }
