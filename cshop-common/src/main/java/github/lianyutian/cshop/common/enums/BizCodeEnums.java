@@ -39,10 +39,10 @@ public enum BizCodeEnums {
     /**
      * 用户微服务账号相关 2102 开头
      */
-    USER_ACCOUNT_EXIST(2102001, "用户账号已存在"),
-    USER_ACCOUNT_UNREGISTER(2102002, "用户账号未注册"),
+    USER_ACCOUNT_EXIST(2102001, "用户已存在"),
+    USER_ACCOUNT_UNREGISTER(2102002, "用户不存在"),
     USER_ACCOUNT_PWD_ERROR(2102003, "用户账号或密码错误"),
-    USER_REFRESH_TOKEN_EMPTY(2102004, "用户刷新 token 为空"),
+    USER_REFRESH_TOKEN_EMPTY(2102004, "请重新登录"),
     USER_ACCOUNT_UNLOGIN(2102005, "用户账号未登录"),
 
     USER_LOGIN_SUCCESS(0, "用户登录成功"),

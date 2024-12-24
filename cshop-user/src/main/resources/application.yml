@@ -5,6 +5,12 @@ server:
 spring:
   application:
     name: cshop-user
+  # mysql配置
+  datasource:
+    username: root
+    password: MIIEowIBAAKCAQEAwG90ULRHmAXFXQzZSwleoYts2+bCzUvqhhqtGiv/F5kUsETY
+    url: jdbc:mysql://116.198.217.158:3306/cshop-user?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+    driver-class-name: com.mysql.cj.jdbc.Driver
   # redis配置
   data:
     redis:
@@ -18,6 +24,7 @@ spring:
           max-idle: 100        # 最大空闲连接数
           min-idle: 100        # 最小空闲连接数
           max-wait: 60000      # 最大等待时间，单位是毫秒
+# 短信配置
 sms:
   aliyun:
     secretId: xxx
@@ -32,14 +39,18 @@ sms:
     templateId:
       aliyun: SMS_476800055
       tencentcloud: xxx
+# 对象存储配置
 oss:
   aliyun:
     secretId: xxx
     secretKey: xxx
     bucketName: xxx
     endPoint: oss-cn-shenzhen.aliyuncs.com
-
 # 设置日志级别：ERROR/WARN/INFO/DEBUG,默认是 INFO 以上才显示
 logging:
   level:
     root: INFO
+# 配置 mybatis plus 打印 sql 日志
+mybatis-plus:
+    configuration:
+        log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
