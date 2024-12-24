@@ -3,6 +3,7 @@ package github.lianyutian.cshop.user.controller;
 import github.lianyutian.cshop.common.enums.BizCodeEnums;
 import github.lianyutian.cshop.common.utils.ApiResult;
 import github.lianyutian.cshop.user.model.vo.UserLoginVO;
+import github.lianyutian.cshop.user.model.vo.UserRegisterVO;
 import github.lianyutian.cshop.user.service.UserService;
 import github.lianyutian.cshop.user.service.oss.OssService;
 import lombok.RequiredArgsConstructor;
@@ -68,6 +69,16 @@ public class UserController {
         }
         String result = ossService.uploadUserAvatar(file);
         return result != null ? ApiResult.success(result) : ApiResult.result(BizCodeEnums.USER_AVATAR_FILE_UPLOAD_ERROR);
+    }
+
+    /**
+     * 用户注册
+     * @param userRegisterVO 注册信息
+     * @return 注册结果
+     */
+    @PostMapping("/register")
+    public ApiResult<Void> register (@RequestBody UserRegisterVO userRegisterVO){
+        return userService.register(userRegisterVO);
     }
 
     /**

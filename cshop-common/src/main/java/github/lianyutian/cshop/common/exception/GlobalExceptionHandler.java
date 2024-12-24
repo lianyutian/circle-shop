@@ -26,7 +26,7 @@ public class GlobalExceptionHandler {
             return ApiResult.error(bizException.getCode(), bizException.getMessage());
         } else {
             log.info("[这里是系统异常信息，具体内容如下: ]{}", e.getMessage(), e);
-            return ApiResult.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "这里是系统异常：" + e);
+            return ApiResult.error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "服务异常请稍后重试");
         }
     }
 }

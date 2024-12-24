@@ -5,6 +5,7 @@ import github.lianyutian.cshop.common.enums.BizCodeEnums;
 import github.lianyutian.cshop.common.utils.ApiResult;
 import github.lianyutian.cshop.common.utils.CheckUtil;
 import github.lianyutian.cshop.common.utils.CommonUtil;
+import github.lianyutian.cshop.user.constant.CacheKeyConstant;
 import github.lianyutian.cshop.user.service.captcha.CaptchaService;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,7 +24,6 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-
 /**
  * 验证码前端控制器
  *
@@ -40,16 +40,6 @@ public class CaptchaController {
      * 图形验证码过期时间
      */
     private static final long CAPTCHA_EXPIRE_TIME = 60 * 1000 * 5;
-
-    /**
-     * 图形验证码缓存 key 前缀
-     */
-    private static final String CAPTCHA_IMG_KEY_PREFIX = "cshop-user:img-captcha:";
-
-    /**
-     * 注册验证码缓存 key 前缀
-     */
-    private static final String CAPTCHA_REGISTER_KEY_PREFIX = "cshop-user:register:";
 
     /**
      * 验证码生成器
@@ -103,7 +93,7 @@ public class CaptchaController {
         }
 
         // 先从缓存中获取验证码 key - code:USER_REGISTER:电话或邮箱
-        String cacheKey = CAPTCHA_REGISTER_KEY_PREFIX + to;
+        String cacheKey = CacheKeyConstant.CAPTCHA_REGISTER_KEY_PREFIX + to;
         String registerCode = redisTemplate.opsForValue().get(cacheKey);
 
         // 如果不为空，则判断是否60秒内重复发送
@@ -128,6 +118,6 @@ public class CaptchaController {
         String userAgent = request.getHeader("User-Agent");
 
         // 根据 ip + userAgent 生成对应的 key
-        return CAPTCHA_IMG_KEY_PREFIX + CommonUtil.MD5(ip + userAgent);
+        return CacheKeyConstant.CAPTCHA_IMG_KEY_PREFIX + CommonUtil.MD5(ip + userAgent);
     }
 }

@@ -33,7 +33,7 @@ public class JWTUtil {
     /**
      * 加密的密钥，从环境变量或配置文件中读取
      */
-    private static final String SECRET = "circle-shop";
+    private static final String SECRET = "MIIEowIBAAKCAQEAwG90ULRHmAXFXQzZSwleoYts2+bCzUvqhhqtGiv/F5kUsETY";
 
     /**
      * token 前缀

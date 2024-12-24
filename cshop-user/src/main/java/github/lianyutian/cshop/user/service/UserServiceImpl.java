@@ -4,18 +4,27 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import github.lianyutian.cshop.common.enums.BizCodeEnums;
 import github.lianyutian.cshop.common.model.LoginUserInfo;
 import github.lianyutian.cshop.common.utils.ApiResult;
+import github.lianyutian.cshop.common.utils.CommonUtil;
+import github.lianyutian.cshop.user.constant.CacheKeyConstant;
 import github.lianyutian.cshop.user.mapper.UserMapper;
 import github.lianyutian.cshop.user.model.po.User;
 import github.lianyutian.cshop.user.model.vo.UserLoginVO;
+import github.lianyutian.cshop.user.model.vo.UserRegisterVO;
 import io.jsonwebtoken.Claims;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.digest.Md5Crypt;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -34,35 +43,59 @@ import static github.lianyutian.cshop.common.utils.JWTUtil.parserToken;
  */
 @Service
 @Slf4j
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserMapper userMapper;
 
     private final StringRedisTemplate redisTemplate;
 
+    private final PasswordEncoder passwordEncoder;
+
+    @Override
+    @Transactional
+    public ApiResult<Void> register(UserRegisterVO userRegisterVO) {
+        // 1. 校验注册验证码是否正确
+        boolean checked = checkCode(userRegisterVO.getPhone(), userRegisterVO.getCode());
+        if (!checked) {
+            return ApiResult.result(BizCodeEnums.USER_CODE_PHONE_ERROR);
+        }
+        // 1.2 通过手机号唯一索引实现唯一
+        User user = new User();
+        BeanUtils.copyProperties(userRegisterVO, user);
+        user.setCreateTime(new Date());
+        user.setUpdateTime(new Date());
+        // 密码加密
+        String secretPwd = passwordEncoder.encode(userRegisterVO.getPassword());
+        user.setPwd(secretPwd);
+        try {
+            userMapper.insert(user);
+        } catch (DuplicateKeyException e) {
+            log.warn("用户微服务-注册模块-用户已存在 {}", userRegisterVO.getPhone());
+            return ApiResult.result(BizCodeEnums.USER_ACCOUNT_EXIST);
+        }
+        return ApiResult.success();
+    }
+
     @Override
     public ApiResult<Map<String, Object>> login(UserLoginVO userLoginVO) {
-        // 1. 根据手机号查询是否注册过
+        // 1. 根据手机号查询是否存在
         LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(User::getPhone, userLoginVO.getPhone());
         List<User> userList = userMapper.selectList(queryWrapper);
-        if (userList != null && userList.size() == 1) {
-            // 1.1 该手机号已经注册了
-            User user = userList.get(0);
-            String pwd = Md5Crypt.md5Crypt(userLoginVO.getPassword().getBytes(), user.getSecret());
-            // 1.2 如果请求的密码加密后跟数据库的匹配
-            if (pwd.equals(user.getPwd())) {
-                // 登录成功，生成 jwt
-                Map<String, Object> jwt = createNewJwt(user);
-
-                return ApiResult.success(jwt);
-            } else {
-                return ApiResult.result(BizCodeEnums.USER_ACCOUNT_PWD_ERROR);
-            }
-        } else {
+        if (CollectionUtils.isEmpty(userList)) {
             // 未注册
-            return ApiResult.result(BizCodeEnums.USER_ACCOUNT_UNREGISTER);
+            return ApiResult.result(BizCodeEnums.USER_ACCOUNT_PWD_ERROR);
+        }
+
+        // 1.1 该手机号已经注册了
+        User user = userList.get(0);
+        if (passwordEncoder.matches(userLoginVO.getPassword(), user.getPwd())) {
+            // 登录成功，生成 jwt
+            Map<String, Object> jwt = createNewJwt(user);
+            return ApiResult.success(jwt);
+        } else {
+            return ApiResult.result(BizCodeEnums.USER_ACCOUNT_PWD_ERROR);
         }
     }
 
@@ -83,9 +116,8 @@ public class UserServiceImpl implements UserService {
         long userId = Long.parseLong(claims.get("id").toString());
         LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(User::getId, userId);
-        List<User> userList = userMapper.selectList(queryWrapper);
-        if (userList != null && userList.size() == 1) {
-            User user = userList.get(0);
+        User user = userMapper.selectOne(queryWrapper);
+        if (user != null) {
             Map<String, Object> jwt = createNewJwt(user);
             // 删除旧的 refreshToken
             redisTemplate.opsForValue().getAndDelete(KEY_PREFIX + refreshToken);
@@ -96,13 +128,29 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    private boolean checkCode(String phone, String code) {
+        // 先从缓存中获取验证码 key - code:USER_REGISTER:电话或邮箱
+        String cacheKey = CacheKeyConstant.CAPTCHA_REGISTER_KEY_PREFIX + phone;
+        String codeVal = redisTemplate.opsForValue().get(cacheKey);
+        if (StringUtils.isBlank(codeVal)) {
+            return false;
+        }
+        String[] parts = codeVal.split("_");
+        String registerCode = parts[0];
+        if (registerCode.equals(code)) {
+            // 删除验证码，确保验证码不可以重复使用
+            redisTemplate.opsForValue().getAndDelete(cacheKey);
+            return true;
+        }
+        return false;
+    }
+
     private Map<String, Object> createNewJwt(User user) {
         // 登录成功，生成 Token
         LoginUserInfo loginUserInfo = LoginUserInfo.builder().build();
-        // 拷贝
         BeanUtils.copyProperties(user, loginUserInfo);
         // 生成 JWT Token，过期时间
-        Map<String,Object> jwt = createJwt(loginUserInfo);
+        Map<String, Object> jwt = createJwt(loginUserInfo);
         // 4、设置 RefreshToken 到 Redis 中，过期时间为 30 天
         String newRefreshToken = (String) jwt.get("RefreshToken");
         String key = KEY_PREFIX + newRefreshToken;

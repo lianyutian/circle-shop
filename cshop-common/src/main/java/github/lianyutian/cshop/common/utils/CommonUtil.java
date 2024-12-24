@@ -19,6 +19,10 @@ import java.util.UUID;
  */
 @Slf4j
 public class CommonUtil {
+    /**
+     * 加密串
+     */
+    private static final String SECRET_STRING = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
     /**
      * 获取客户端 ip

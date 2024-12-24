@@ -40,7 +40,8 @@ public class CaptchaServiceImpl implements CaptchaService {
         redisTemplate.opsForValue().set(cacheKey, newCode, CAPTCHA_EXPIRE_TIME, TimeUnit.MILLISECONDS);
 
         // 发送短信
-        boolean sendRes = smsSender.send(to, new String[]{code});
+        // boolean sendRes = smsSender.send(to, new String[]{code});
+        boolean sendRes = true;
 
         if (!sendRes) {
             // 发送失败删除缓存
