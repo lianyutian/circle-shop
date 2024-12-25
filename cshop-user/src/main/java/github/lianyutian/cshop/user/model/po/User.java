@@ -47,24 +47,9 @@ public class User implements Serializable {
     private Integer sex;
 
     /**
-     * 用户积分
-     */
-    private Integer points;
-
-    /**
      * 用户手机号
      */
     private String phone;
-
-    /**
-     * 用户邮箱
-     */
-    private String mail;
-
-    /**
-     * 用来个人敏感信息处理
-     */
-    private String secret;
 
     /**
      * 创建时间

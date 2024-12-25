@@ -2,12 +2,14 @@ package github.lianyutian.cshop.user.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import github.lianyutian.cshop.common.enums.BizCodeEnums;
+import github.lianyutian.cshop.common.interceptor.LoginInterceptor;
 import github.lianyutian.cshop.common.model.LoginUserInfo;
 import github.lianyutian.cshop.common.utils.ApiResult;
 import github.lianyutian.cshop.common.utils.JWTUtil;
 import github.lianyutian.cshop.user.constant.CacheKeyConstant;
 import github.lianyutian.cshop.user.mapper.UserMapper;
 import github.lianyutian.cshop.user.model.po.User;
+import github.lianyutian.cshop.user.model.vo.UserDetailVO;
 import github.lianyutian.cshop.user.model.vo.UserLoginVO;
 import github.lianyutian.cshop.user.model.vo.UserRegisterVO;
 import io.jsonwebtoken.Claims;
@@ -121,6 +123,18 @@ public class UserServiceImpl implements UserService {
             // 无法解密提示未登录
             return ApiResult.result(BizCodeEnums.USER_ACCOUNT_UNLOGIN);
         }
+    }
+
+    @Override
+    public UserDetailVO getUserDetail() {
+        // 通过登录拦截器中 ThreadLocal 进行了用户信息传递
+        LoginUserInfo loginUserInfo = LoginInterceptor.USER_THREAD_LOCAL.get();
+
+        User user = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getId, loginUserInfo.getId()));
+
+        UserDetailVO userDetailVO = new UserDetailVO();
+        BeanUtils.copyProperties(user, userDetailVO);
+        return userDetailVO;
     }
 
     private boolean checkCode(String phone, String code) {

@@ -89,7 +89,7 @@ public class JWTUtil {
      */
     public static Claims parserToken(String token) {
         if (token == null || !token.startsWith(TOKEN_PREFIX)) {
-            log.error("公共服务-解析 token 失败：无效的 token 格式");
+            log.warn("公共服务-解析 token 失败：无效的 token 格式");
             return null;
         }
 

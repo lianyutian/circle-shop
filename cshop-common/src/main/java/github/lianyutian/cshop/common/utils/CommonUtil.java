@@ -1,8 +1,13 @@
 package github.lianyutian.cshop.common.utils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import github.lianyutian.cshop.common.exception.BizException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
@@ -19,6 +24,11 @@ import java.util.UUID;
  */
 @Slf4j
 public class CommonUtil {
+    /**
+     * 单例化 ObjectMapper
+     */
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     /**
      * 加密串
      */
@@ -128,5 +138,46 @@ public class CommonUtil {
      */
     public static String generateUUID() {
         return UUID.randomUUID().toString().replace("-", "");
+    }
+
+    /**
+     * 向客户端发送HTTP响应
+     * 此方法用于将给定的ApiResult对象序列化为JSON格式，并通过 HttpServletResponse 对象将其作为HTTP响应返回给客户端
+     * 它处理响应的序列化和发送过程，并记录相关日志
+     *
+     * @param response 用于发送响应的 HttpServletResponse 对象
+     * @param result 要序列化并发送的 ApiResult 对象
+     */
+    public static void sendResponse(HttpServletResponse response, ApiResult<Void> result) {
+        // 设置响应头
+        response.setContentType("application/json; charset=utf-8");
+
+        String jsonResponse;
+        try {
+            // 将ApiResult对象序列化为JSON字符串
+            jsonResponse = OBJECT_MAPPER.writeValueAsString(result);
+        } catch (IOException e) {
+            // 记录序列化异常信息
+            log.warn("序列化响应数据异常：{}", e.getMessage(), e);
+            // 如果序列化失败，抛出自定义异常
+            throw new BizException("序列化响应数据失败");
+        }
+
+        try (PrintWriter writer = response.getWriter()) {
+            // 写出响应
+            writer.print(jsonResponse);
+            // 刷新响应缓冲区，确保响应被发送
+            response.flushBuffer();
+        } catch (IOException e) {
+            // 记录发送响应异常信息
+            log.warn("返回响应给前端异常：{}", e.getMessage(), e);
+            // 如果发送响应失败，抛出自定义异常
+            throw new BizException("返回响应给前端失败");
+        }
+
+        // 如果启用了信息级别日志记录，记录发送的响应数据
+        if (log.isInfoEnabled()) {
+            log.info("返回响应给前端数据：{}", jsonResponse);
+        }
     }
 }

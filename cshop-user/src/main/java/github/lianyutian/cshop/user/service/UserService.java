@@ -1,6 +1,7 @@
 package github.lianyutian.cshop.user.service;
 
 import github.lianyutian.cshop.common.utils.ApiResult;
+import github.lianyutian.cshop.user.model.vo.UserDetailVO;
 import github.lianyutian.cshop.user.model.vo.UserLoginVO;
 import github.lianyutian.cshop.user.model.vo.UserRegisterVO;
 
@@ -37,4 +38,11 @@ public interface UserService {
      * @param accessToken  访问token
      */
     ApiResult<Map<String, Object>> refreshToken(String refreshToken, String accessToken);
+
+    /**
+     * 获取用户详情
+     *
+     * @return 用户详情
+     */
+    UserDetailVO getUserDetail();
 }

@@ -2,6 +2,7 @@ package github.lianyutian.cshop.user.controller;
 
 import github.lianyutian.cshop.common.enums.BizCodeEnums;
 import github.lianyutian.cshop.common.utils.ApiResult;
+import github.lianyutian.cshop.user.model.vo.UserDetailVO;
 import github.lianyutian.cshop.user.model.vo.UserLoginVO;
 import github.lianyutian.cshop.user.model.vo.UserRegisterVO;
 import github.lianyutian.cshop.user.service.UserService;
@@ -9,6 +10,7 @@ import github.lianyutian.cshop.user.service.oss.OssService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -103,6 +105,17 @@ public class UserController {
     public ApiResult<Map<String, Object>> refreshToken(@RequestParam(value = "refreshToken") String refreshToken,
                                                        @RequestParam(value = "accessToken") String accessToken) {
         return userService.refreshToken(refreshToken, accessToken);
+    }
+
+    /**
+     * 用户账号信息查询
+     *
+     * @return 用户信息
+     */
+    @GetMapping("userDetail")
+    public ApiResult<UserDetailVO> userDetail() {
+        UserDetailVO userDetailVO = userService.getUserDetail();
+        return ApiResult.success(userDetailVO);
     }
 
     private boolean isFileTypeAllowed(String contentType) {
