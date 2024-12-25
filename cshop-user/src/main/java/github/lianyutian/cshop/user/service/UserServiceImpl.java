@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import github.lianyutian.cshop.common.enums.BizCodeEnums;
 import github.lianyutian.cshop.common.model.LoginUserInfo;
 import github.lianyutian.cshop.common.utils.ApiResult;
-import github.lianyutian.cshop.common.utils.CommonUtil;
+import github.lianyutian.cshop.common.utils.JWTUtil;
 import github.lianyutian.cshop.user.constant.CacheKeyConstant;
 import github.lianyutian.cshop.user.mapper.UserMapper;
 import github.lianyutian.cshop.user.model.po.User;
@@ -15,10 +15,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,8 +29,6 @@ import java.util.concurrent.TimeUnit;
 
 import static github.lianyutian.cshop.common.utils.JWTUtil.KEY_PREFIX;
 import static github.lianyutian.cshop.common.utils.JWTUtil.REFRESH_EXPIRE;
-import static github.lianyutian.cshop.common.utils.JWTUtil.createJwt;
-import static github.lianyutian.cshop.common.utils.JWTUtil.parserToken;
 
 /**
  * 用户服务实现类
@@ -64,7 +60,6 @@ public class UserServiceImpl implements UserService {
         User user = new User();
         BeanUtils.copyProperties(userRegisterVO, user);
         user.setCreateTime(new Date());
-        user.setUpdateTime(new Date());
         // 密码加密
         String secretPwd = passwordEncoder.encode(userRegisterVO.getPassword());
         user.setPwd(secretPwd);
@@ -107,7 +102,7 @@ public class UserServiceImpl implements UserService {
             return ApiResult.result(BizCodeEnums.USER_REFRESH_TOKEN_EMPTY);
         }
         // 2、如果存在，解密 accessToken
-        Claims claims = parserToken(accessToken);
+        Claims claims = JWTUtil.parserToken(accessToken);
         if (claims == null) {
             // 无法解密提示未登录
             return ApiResult.result(BizCodeEnums.USER_ACCOUNT_UNLOGIN);
@@ -150,7 +145,7 @@ public class UserServiceImpl implements UserService {
         LoginUserInfo loginUserInfo = LoginUserInfo.builder().build();
         BeanUtils.copyProperties(user, loginUserInfo);
         // 生成 JWT Token，过期时间
-        Map<String, Object> jwt = createJwt(loginUserInfo);
+        Map<String, Object> jwt = JWTUtil.createJwt(loginUserInfo);
         // 4、设置 RefreshToken 到 Redis 中，过期时间为 30 天
         String newRefreshToken = (String) jwt.get("RefreshToken");
         String key = KEY_PREFIX + newRefreshToken;
