@@ -1,11 +1,11 @@
 package github.lianyutian.cshop.user.service.sms.impl;
 
-import com.google.gson.Gson;
 import com.tencentcloudapi.common.Credential;
 import com.tencentcloudapi.common.exception.TencentCloudSDKException;
 import com.tencentcloudapi.sms.v20210111.SmsClient;
 import com.tencentcloudapi.sms.v20210111.models.SendSmsRequest;
 import com.tencentcloudapi.sms.v20210111.models.SendSmsResponse;
+import github.lianyutian.cshop.common.utils.JsonUtil;
 import github.lianyutian.cshop.user.service.sms.SmsCodeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,7 +47,7 @@ public class TencentcloudSmsCodeServiceImpl implements SmsCodeService {
              * 第二个参数是地域信息，可以直接填写字符串ap-guangzhou，支持的地域列表参考
              * https://cloud.tencent.com/document/api/382/52071#.E5.9C.B0.E5.9F.9F.E5.88.97.E8.A1.A8 */
             SendSmsResponse sendSmsResponse = sendSms(cred, signName, templateId, new String[]{phone}, templateParam);
-            log.info("短信模块-短信发送结果：{}", new Gson().toJson(sendSmsResponse));
+            log.info("短信模块-短信发送结果：{}", JsonUtil.toJson(sendSmsResponse));
 
             if (Objects.equals(sendSmsResponse.getSendStatusSet()[0].getCode(), "Ok")) {
                 return true;

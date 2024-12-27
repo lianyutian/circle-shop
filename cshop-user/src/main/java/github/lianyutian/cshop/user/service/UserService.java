@@ -1,6 +1,7 @@
 package github.lianyutian.cshop.user.service;
 
 import github.lianyutian.cshop.common.utils.ApiResult;
+import github.lianyutian.cshop.user.model.param.UserEditParam;
 import github.lianyutian.cshop.user.model.vo.UserDetailVO;
 import github.lianyutian.cshop.user.model.param.UserLoginParam;
 import github.lianyutian.cshop.user.model.param.UserRegisterParam;
@@ -45,4 +46,11 @@ public interface UserService {
      * @return 用户详情
      */
     UserDetailVO getUserDetail();
+
+    /**
+     * 更新用户信息
+     *
+     * @param userEditParam 用户编辑参数
+     */
+    void updateUserInfo(UserEditParam userEditParam);
 }

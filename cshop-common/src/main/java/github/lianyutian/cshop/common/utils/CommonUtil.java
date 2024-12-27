@@ -13,6 +13,7 @@ import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Random;
 import java.util.UUID;
 
 /**
@@ -179,5 +180,26 @@ public class CommonUtil {
         if (log.isInfoEnabled()) {
             log.info("返回响应给前端数据：{}", jsonResponse);
         }
+    }
+
+    /**
+     * 生成区间范围内的随机数
+     *
+     * @param min min
+     * @param max max
+     * @return 随机数
+     */
+    public static int genRandomInt(int min, int max) {
+        return genRandomInt(max-min)+min;
+    }
+
+    /**
+     * 生成随机数
+     *
+     * @param bound bound
+     * @return 随机数
+     */
+    public static int genRandomInt(int bound) {
+        return new Random().nextInt(bound);
     }
 }

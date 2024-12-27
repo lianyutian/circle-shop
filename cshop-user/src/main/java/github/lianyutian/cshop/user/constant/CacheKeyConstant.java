@@ -17,4 +17,11 @@ public class CacheKeyConstant {
      * 注册验证码缓存 key 前缀
      */
     public static final String CAPTCHA_REGISTER_KEY_PREFIX = "cshop-user:register:";
+
+    /**
+     * 用户信息更新锁前缀
+     */
+    public static final String USER_UPDATE_LOCK_KEY_PREFIX = "cshop-user:update:";
+
+    public static final String USER_INFO_KEY_PREFIX = "cshop-user:info:";
 }

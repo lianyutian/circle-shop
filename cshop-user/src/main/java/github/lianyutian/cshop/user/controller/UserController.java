@@ -2,6 +2,7 @@ package github.lianyutian.cshop.user.controller;
 
 import github.lianyutian.cshop.common.enums.BizCodeEnums;
 import github.lianyutian.cshop.common.utils.ApiResult;
+import github.lianyutian.cshop.user.model.param.UserEditParam;
 import github.lianyutian.cshop.user.model.vo.UserDetailVO;
 import github.lianyutian.cshop.user.model.param.UserLoginParam;
 import github.lianyutian.cshop.user.model.param.UserRegisterParam;
@@ -116,6 +117,18 @@ public class UserController {
     public ApiResult<UserDetailVO> userDetail() {
         UserDetailVO userDetailVO = userService.getUserDetail();
         return ApiResult.success(userDetailVO);
+    }
+
+    /**
+     * 用户信息修改
+     *
+     * @param userEditParam 用户信息
+     * @return 修改结果
+     */
+    @PostMapping("/edit")
+    public ApiResult<Void> edit(@RequestBody UserEditParam userEditParam) {
+        userService.updateUserInfo(userEditParam);
+        return ApiResult.success();
     }
 
     private boolean isFileTypeAllowed(String contentType) {

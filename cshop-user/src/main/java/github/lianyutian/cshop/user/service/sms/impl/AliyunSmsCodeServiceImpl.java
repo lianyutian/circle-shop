@@ -7,6 +7,7 @@ import com.aliyun.sdk.service.dysmsapi20170525.models.SendSmsRequest;
 import com.aliyun.sdk.service.dysmsapi20170525.models.SendSmsResponse;
 import com.google.gson.Gson;
 import darabonba.core.client.ClientOverrideConfiguration;
+import github.lianyutian.cshop.common.utils.JsonUtil;
 import github.lianyutian.cshop.user.service.sms.SmsCodeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -73,7 +74,7 @@ public class AliyunSmsCodeServiceImpl implements SmsCodeService {
             CompletableFuture<SendSmsResponse> response = client.sendSms(sendSmsRequest);
             // 同步获取API请求的返回值
             SendSmsResponse resp = response.get();
-            log.info("短信模块-短信发送结果：{}", new Gson().toJson(resp));
+            log.info("短信模块-短信发送结果：{}", JsonUtil.toJson(resp));
 
             String code = resp.getBody().getCode();
             if (Objects.equals(code, "OK")) {

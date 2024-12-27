@@ -1,8 +1,14 @@
-package github.lianyutian.cshop.user.config;
+package github.lianyutian.cshop.common.redis;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.redisson.Redisson;
+import org.redisson.api.RedissonClient;
+import org.redisson.client.codec.StringCodec;
+import org.redisson.config.Config;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -18,7 +24,20 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  * @version 1.0
  */
 @Configuration
-public class RedisTemplateConfig {
+@ConditionalOnClass(RedisConnectionFactory.class)
+public class RedisConfig {
+
+    @Value("${spring.data.redis.host}")
+    private String redisHost;
+
+    @Value("${spring.data.redis.port}")
+    private String redisPort;
+
+    @Value("${spring.data.redis.password}")
+    private String redisPwd;
+
+    @Value("${spring.data.redis.timeout}")
+    private int redisTimeout;
 
     /**
      * 配置 RedisTemplate 用于操作 Redis 数据库
@@ -55,5 +74,47 @@ public class RedisTemplateConfig {
         redisTemplate.setHashValueSerializer(jackson2JsonRedisSerializer);
 
         return redisTemplate;
+    }
+
+    /**
+     * 实例化 redissonClient
+     *
+     * @return RedissonClient
+     */
+    @Bean
+    public RedissonClient redissonClient(){
+        Config config = new Config();
+        config.useSingleServer()
+                .setAddress("redis://" + redisHost + ":" + redisPort)
+                .setPassword(redisPwd)
+                // 设置连接池最小空闲大小
+                .setConnectionMinimumIdleSize(10)
+                // 设置连接池大小
+                .setConnectionPoolSize(100)
+                // 设置空闲链接超时时间
+                .setIdleConnectionTimeout(600000)
+                .setSubscriptionConnectionMinimumIdleSize(10)
+                .setSubscriptionConnectionPoolSize(100)
+                // 设置超时时间
+                .setTimeout(redisTimeout);
+
+        config.setCodec(new StringCodec());
+        // 设置线程数
+        config.setThreads(5);
+        // 设置 netty 线程数
+        config.setNettyThreads(5);
+        // 实例化 redisson 客户端
+        return Redisson.create(config);
+    }
+
+    /**
+     * 实例化分布式锁
+     *
+     * @param redissonClient redisson 客户端
+     * @return 分布式锁对象
+     */
+    @Bean
+    public RedisLock redisLock(RedissonClient redissonClient) {
+        return new RedisLock(redissonClient);
     }
 }

@@ -1,13 +1,18 @@
 package github.lianyutian.cshop.user.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import github.lianyutian.cshop.common.enums.BizCodeEnums;
+import github.lianyutian.cshop.common.exception.BizException;
 import github.lianyutian.cshop.common.interceptor.LoginInterceptor;
 import github.lianyutian.cshop.common.model.LoginUserInfo;
+import github.lianyutian.cshop.common.redis.RedisCache;
+import github.lianyutian.cshop.common.redis.RedisLock;
 import github.lianyutian.cshop.common.utils.ApiResult;
 import github.lianyutian.cshop.common.utils.JWTUtil;
 import github.lianyutian.cshop.user.constant.CacheKeyConstant;
 import github.lianyutian.cshop.user.mapper.UserMapper;
+import github.lianyutian.cshop.user.model.param.UserEditParam;
 import github.lianyutian.cshop.user.model.po.User;
 import github.lianyutian.cshop.user.model.vo.UserDetailVO;
 import github.lianyutian.cshop.user.model.param.UserLoginParam;
@@ -25,7 +30,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -135,6 +139,20 @@ public class UserServiceImpl implements UserService {
         UserDetailVO userDetailVO = new UserDetailVO();
         BeanUtils.copyProperties(user, userDetailVO);
         return userDetailVO;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateUserInfo(UserEditParam userEditParam) {
+        LoginUserInfo loginUserInfo = LoginInterceptor.USER_THREAD_LOCAL.get();
+
+        User user = new User();
+        BeanUtils.copyProperties(userEditParam, user);
+        int rows = userMapper.update(user,
+                new LambdaUpdateWrapper<User>()
+                        .eq(User::getId, loginUserInfo.getId())
+        );
+        log.info("用户模块-修改用户信息：rows={}，data={}", rows, user);
     }
 
     private boolean checkCode(String phone, String code) {

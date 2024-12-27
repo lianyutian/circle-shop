@@ -46,6 +46,10 @@
         <mysql-connector-java.version>8.0.33</mysql-connector-java.version>
         <!-- jwt 版本 -->
         <jwt.version>0.12.6</jwt.version>
+        <!-- redisson 版本 -->
+        <redisson.version>3.41.0</redisson.version>
+        <!-- gson 版本 -->
+        <gson.version>2.10.1</gson.version>
     </properties>
 
     <dependencyManagement>
@@ -119,6 +123,17 @@
                 <groupId>io.jsonwebtoken</groupId>
                 <artifactId>jjwt</artifactId>
                 <version>${jwt.version}</version>
+            </dependency>
+            <!-- https://mvnrepository.com/artifact/org.redisson/redisson -->
+            <dependency>
+                <groupId>org.redisson</groupId>
+                <artifactId>redisson</artifactId>
+                <version>${redisson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.code.gson</groupId>
+                <artifactId>gson</artifactId>
+                <version>${gson.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
