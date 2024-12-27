@@ -3,8 +3,8 @@ package github.lianyutian.cshop.user.controller;
 import github.lianyutian.cshop.common.enums.BizCodeEnums;
 import github.lianyutian.cshop.common.utils.ApiResult;
 import github.lianyutian.cshop.user.model.vo.UserDetailVO;
-import github.lianyutian.cshop.user.model.vo.UserLoginVO;
-import github.lianyutian.cshop.user.model.vo.UserRegisterVO;
+import github.lianyutian.cshop.user.model.param.UserLoginParam;
+import github.lianyutian.cshop.user.model.param.UserRegisterParam;
 import github.lianyutian.cshop.user.service.UserService;
 import github.lianyutian.cshop.user.service.oss.OssService;
 import lombok.RequiredArgsConstructor;
@@ -79,7 +79,7 @@ public class UserController {
      * @return 注册结果
      */
     @PostMapping("/register")
-    public ApiResult<Void> register (@RequestBody UserRegisterVO userRegisterVO){
+    public ApiResult<Void> register (@RequestBody UserRegisterParam userRegisterVO){
         return userService.register(userRegisterVO);
     }
 
@@ -90,7 +90,7 @@ public class UserController {
      * @return 登录结果
      */
     @PostMapping("login")
-    public ApiResult<Map<String, Object>> login(@RequestBody UserLoginVO userLoginVO) {
+    public ApiResult<Map<String, Object>> login(@RequestBody UserLoginParam userLoginVO) {
         return userService.login(userLoginVO);
     }
 

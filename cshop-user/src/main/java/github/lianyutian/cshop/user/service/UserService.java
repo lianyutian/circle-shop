@@ -2,8 +2,8 @@ package github.lianyutian.cshop.user.service;
 
 import github.lianyutian.cshop.common.utils.ApiResult;
 import github.lianyutian.cshop.user.model.vo.UserDetailVO;
-import github.lianyutian.cshop.user.model.vo.UserLoginVO;
-import github.lianyutian.cshop.user.model.vo.UserRegisterVO;
+import github.lianyutian.cshop.user.model.param.UserLoginParam;
+import github.lianyutian.cshop.user.model.param.UserRegisterParam;
 
 import java.util.Map;
 
@@ -21,7 +21,7 @@ public interface UserService {
      * @param userRegisterVO 用户注册VO
      * @return 注册结果
      */
-    ApiResult<Void> register(UserRegisterVO userRegisterVO);
+    ApiResult<Void> register(UserRegisterParam userRegisterVO);
 
     /**
      * 用户登录
@@ -29,7 +29,7 @@ public interface UserService {
      * @param userLoginVO 用户登录VO
      * @return 登录结果
      */
-    ApiResult<Map<String, Object>> login(UserLoginVO userLoginVO);
+    ApiResult<Map<String, Object>> login(UserLoginParam userLoginVO);
 
     /**
      * 刷新token

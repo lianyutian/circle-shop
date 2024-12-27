@@ -1,16 +1,16 @@
-package github.lianyutian.cshop.user.model.vo;
+package github.lianyutian.cshop.user.model.param;
 
 import lombok.Data;
 
 /**
- * 用户登录VO
+ * 用户登录参数
  *
  * @author lianyutian
  * @since 2024-12-24 08:40:33
  * @version 1.0
  */
 @Data
-public class UserLoginVO {
+public class UserLoginParam {
     /**
      * 手机号
      */

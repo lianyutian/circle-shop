@@ -1,4 +1,4 @@
-package github.lianyutian.cshop.user.service;
+package github.lianyutian.cshop.user.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import github.lianyutian.cshop.common.enums.BizCodeEnums;
@@ -10,8 +10,9 @@ import github.lianyutian.cshop.user.constant.CacheKeyConstant;
 import github.lianyutian.cshop.user.mapper.UserMapper;
 import github.lianyutian.cshop.user.model.po.User;
 import github.lianyutian.cshop.user.model.vo.UserDetailVO;
-import github.lianyutian.cshop.user.model.vo.UserLoginVO;
-import github.lianyutian.cshop.user.model.vo.UserRegisterVO;
+import github.lianyutian.cshop.user.model.param.UserLoginParam;
+import github.lianyutian.cshop.user.model.param.UserRegisterParam;
+import github.lianyutian.cshop.user.service.UserService;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +53,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public ApiResult<Void> register(UserRegisterVO userRegisterVO) {
+    public ApiResult<Void> register(UserRegisterParam userRegisterVO) {
         // 1. 校验注册验证码是否正确
         boolean checked = checkCode(userRegisterVO.getPhone(), userRegisterVO.getCode());
         if (!checked) {
@@ -75,7 +76,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ApiResult<Map<String, Object>> login(UserLoginVO userLoginVO) {
+    public ApiResult<Map<String, Object>> login(UserLoginParam userLoginVO) {
         // 1. 根据手机号查询是否存在
         LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(User::getPhone, userLoginVO.getPhone());
