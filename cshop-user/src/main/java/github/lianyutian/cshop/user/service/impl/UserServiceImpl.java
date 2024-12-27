@@ -62,7 +62,6 @@ public class UserServiceImpl implements UserService {
         // 1.2 通过手机号唯一索引实现唯一
         User user = new User();
         BeanUtils.copyProperties(userRegisterVO, user);
-        user.setCreateTime(new Date());
         // 密码加密
         String secretPwd = passwordEncoder.encode(userRegisterVO.getPassword());
         user.setPwd(secretPwd);

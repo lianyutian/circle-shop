@@ -16,7 +16,3 @@ import org.apache.ibatis.annotations.Mapper;
 public interface UserAddressMapper extends BaseMapper<UserAddress> {
 
 }
-
-
-
-

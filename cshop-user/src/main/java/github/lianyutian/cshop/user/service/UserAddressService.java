@@ -1,6 +1,5 @@
 package github.lianyutian.cshop.user.service;
 
-import github.lianyutian.cshop.common.utils.ApiResult;
 import github.lianyutian.cshop.user.model.param.AddressAddParam;
 import github.lianyutian.cshop.user.model.param.AddressEditParam;
 import github.lianyutian.cshop.user.model.vo.UserAddressVO;
