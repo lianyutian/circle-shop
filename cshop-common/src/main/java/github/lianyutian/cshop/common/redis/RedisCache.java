@@ -66,6 +66,15 @@ public class RedisCache {
     }
 
     /**
+     * 生成缓存穿透过期时间，单位 秒
+     *
+     * @return 随机 30 - 100 秒
+     */
+    public static Integer generateCachePenetrationExpire() {
+        return CommonUtil.genRandomInt(30, 100);
+    }
+
+    /**
      * 写入缓存
      *
      * @param key key
@@ -132,6 +141,27 @@ public class RedisCache {
         } catch (Exception e) {
             log.error("删除缓存失败, key: {}", key, e);
             throw new RuntimeException("删除缓存失败", e);
+        }
+    }
+
+    /**
+     * 设置缓存过期时间
+     *
+     * @param key key
+     * @param seconds 过期时间
+     */
+    public void expire(String key, Integer seconds) {
+        if (key == null || key.isEmpty()) {
+            throw new IllegalArgumentException("Key cannot be null or empty");
+        }
+        if (seconds == null || seconds < 0) {
+            throw new IllegalArgumentException("Expiration time must be a non-negative integer");
+        }
+        try {
+            redisTemplate.expire(key, seconds, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            log.error("Failed to set expiration for key: {}", key, e);
+            throw new RuntimeException("Failed to set expiration for key: " + key, e);
         }
     }
 }

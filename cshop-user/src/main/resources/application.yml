@@ -18,6 +18,7 @@ spring:
       port: 6379
       password: MIIEowIBAAKCAQEAwG90ULRHmAXFXQzZSwleoYts2+bCzUvqhhqtGiv/F5kUsETY  # 如果有密码
       database: 0  # 默认数据库
+      timeout: 60000 # 读取 redis 超时时间
       lettuce:
         pool:
           max-active: 100      # 最大连接数

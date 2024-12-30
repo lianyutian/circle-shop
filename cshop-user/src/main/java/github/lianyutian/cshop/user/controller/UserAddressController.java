@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * 用户地址前端控制器
+ * UserAddressController
  *
  * @author lianyutian
  * @since 2024-12-26 09:42:18

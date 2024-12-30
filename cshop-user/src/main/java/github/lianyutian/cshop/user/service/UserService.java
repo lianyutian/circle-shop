@@ -5,6 +5,7 @@ import github.lianyutian.cshop.user.model.param.UserEditParam;
 import github.lianyutian.cshop.user.model.vo.UserDetailVO;
 import github.lianyutian.cshop.user.model.param.UserLoginParam;
 import github.lianyutian.cshop.user.model.param.UserRegisterParam;
+import github.lianyutian.cshop.user.model.vo.UserShowDetailVO;
 
 import java.util.Map;
 
@@ -53,4 +54,12 @@ public interface UserService {
      * @param userEditParam 用户编辑参数
      */
     void updateUserInfo(UserEditParam userEditParam);
+
+    /**
+     * 获取用户展示详情
+     *
+     * @param userId 用户id
+     * @return 用户展示详情
+     */
+    UserShowDetailVO getUserShowDetail(Long userId);
 }

@@ -12,6 +12,11 @@ import lombok.Data;
 @Data
 public class UserEditParam {
     /**
+     * 用户id
+     */
+    private Long id;
+
+    /**
      * 手机号
      */
     private String phone;

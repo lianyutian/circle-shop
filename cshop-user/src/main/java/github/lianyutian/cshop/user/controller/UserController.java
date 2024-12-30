@@ -6,12 +6,14 @@ import github.lianyutian.cshop.user.model.param.UserEditParam;
 import github.lianyutian.cshop.user.model.vo.UserDetailVO;
 import github.lianyutian.cshop.user.model.param.UserLoginParam;
 import github.lianyutian.cshop.user.model.param.UserRegisterParam;
+import github.lianyutian.cshop.user.model.vo.UserShowDetailVO;
 import github.lianyutian.cshop.user.service.UserService;
 import github.lianyutian.cshop.user.service.oss.OssService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -79,7 +81,7 @@ public class UserController {
      * @param userRegisterVO 注册信息
      * @return 注册结果
      */
-    @PostMapping("/register")
+    @PostMapping("register")
     public ApiResult<Void> register (@RequestBody UserRegisterParam userRegisterVO){
         return userService.register(userRegisterVO);
     }
@@ -113,7 +115,7 @@ public class UserController {
      *
      * @return 用户信息
      */
-    @GetMapping("userDetail")
+    @GetMapping("detail")
     public ApiResult<UserDetailVO> userDetail() {
         UserDetailVO userDetailVO = userService.getUserDetail();
         return ApiResult.success(userDetailVO);
@@ -125,10 +127,22 @@ public class UserController {
      * @param userEditParam 用户信息
      * @return 修改结果
      */
-    @PostMapping("/edit")
+    @PostMapping("edit")
     public ApiResult<Void> edit(@RequestBody UserEditParam userEditParam) {
         userService.updateUserInfo(userEditParam);
         return ApiResult.success();
+    }
+
+    /**
+     * 获取用户展示信息
+     *
+     * @param userId 用户ID
+     * @return 用户展示信息
+     */
+    @GetMapping("detailShow/{userId}")
+    public ApiResult<UserShowDetailVO> getUserShowDetail(@PathVariable("userId") Long userId) {
+        UserShowDetailVO userShowDetailVO = userService.getUserShowDetail(userId);
+        return ApiResult.success(userShowDetailVO);
     }
 
     private boolean isFileTypeAllowed(String contentType) {

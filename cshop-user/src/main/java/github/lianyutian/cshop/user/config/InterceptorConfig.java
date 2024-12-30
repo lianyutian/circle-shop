@@ -36,7 +36,8 @@ public class InterceptorConfig implements WebMvcConfigurer {
                         "/api/user/*/sendRegisterCode",
                         "/api/user/*/register",
                         "/api/user/*/login",
-                        "/api/user/*/uploadUserAvatar"
+                        "/api/user/*/uploadUserAvatar",
+                        "/api/user/*/detailShow/*"
                 );
     }
 }

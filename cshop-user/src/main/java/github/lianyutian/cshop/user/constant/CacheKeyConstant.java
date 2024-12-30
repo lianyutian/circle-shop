@@ -21,7 +21,10 @@ public class CacheKeyConstant {
     /**
      * 用户信息更新锁前缀
      */
-    public static final String USER_UPDATE_LOCK_KEY_PREFIX = "cshop-user:update:";
+    public static final String USER_UPDATE_LOCK_KEY_PREFIX = "cshop-user:update:lock:";
 
+    /**
+     * 用户信息缓存前缀
+     */
     public static final String USER_INFO_KEY_PREFIX = "cshop-user:info:";
 }

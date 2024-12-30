@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 验证码前端控制器
+ * CaptchaController
  *
  * @author lianyutian
  * @since 2024-12-17 11:17:12
