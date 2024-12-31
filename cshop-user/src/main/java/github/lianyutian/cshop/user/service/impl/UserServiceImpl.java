@@ -164,9 +164,10 @@ public class UserServiceImpl implements UserService {
     public void updateUserInfo(UserEditParam userEditParam) {
         LoginUserInfo loginUserInfo = LoginInterceptor.USER_THREAD_LOCAL.get();
         userEditParam.setId(loginUserInfo.getId());
+        boolean locked = false;
         try {
             // 这里加分布式锁是为了保证高并发下有其他用户查询该用户信息时保证数据库和缓存的一致性
-            boolean locked = redisLock.lock(CacheKeyConstant.USER_UPDATE_LOCK_KEY_PREFIX + loginUserInfo.getId());
+            locked = redisLock.lock(CacheKeyConstant.USER_UPDATE_LOCK_KEY_PREFIX + loginUserInfo.getId());
 
             if (!locked) {
                 log.warn("用户模块-修改用户信息：用户 {} 获取锁失败", loginUserInfo.getId());
@@ -191,7 +192,9 @@ public class UserServiceImpl implements UserService {
                     RedisCache.generateCacheExpire()
             );
         } finally {
-            redisLock.unlock(CacheKeyConstant.USER_UPDATE_LOCK_KEY_PREFIX + loginUserInfo.getId());
+            if (locked) {
+                redisLock.unlock(CacheKeyConstant.USER_UPDATE_LOCK_KEY_PREFIX + loginUserInfo.getId());
+            }
         }
     }
 
