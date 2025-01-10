@@ -11,25 +11,17 @@ import lombok.Data;
  */
 @Data
 public class UserDetailVO {
-    private Long id;
+  private Long id;
 
-    /**
-     * 用户名
-     */
-    private String name;
+  /** 用户名 */
+  private String name;
 
-    /**
-     * 用户头像
-     */
-    private String avatar;
+  /** 用户头像 */
+  private String avatar;
 
-    /**
-     * 0 女，1 男
-     */
-    private Integer sex;
+  /** 0 女，1 男 */
+  private Integer sex;
 
-    /**
-     * 用户手机号
-     */
-    private String phone;
+  /** 用户手机号 */
+  private String phone;
 }

@@ -11,28 +11,18 @@ import lombok.Data;
  */
 @Data
 public class UserEditParam {
-    /**
-     * 用户id
-     */
-    private Long id;
+  /** 用户id */
+  private Long id;
 
-    /**
-     * 手机号
-     */
-    private String phone;
+  /** 手机号 */
+  private String phone;
 
-    /**
-     * 用户名
-     */
-    private String name;
+  /** 用户名 */
+  private String name;
 
-    /**
-     * 头像
-     */
-    private String avatar;
+  /** 头像 */
+  private String avatar;
 
-    /**
-     * 性别
-     */
-    private int sex;
+  /** 性别 */
+  private int sex;
 }

@@ -11,13 +11,9 @@ import lombok.Data;
  */
 @Data
 public class UserLoginParam {
-    /**
-     * 手机号
-     */
-    private String phone;
+  /** 手机号 */
+  private String phone;
 
-    /**
-     * 密码
-     */
-    private String password;
+  /** 密码 */
+  private String password;
 }

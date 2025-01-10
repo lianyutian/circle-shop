@@ -11,14 +11,14 @@ import lombok.Getter;
  */
 @Getter
 public enum AddressStatusEnum {
-    DEFAULT_STATUS(0, "默认地址"),
-    NOT_DEFAULT_STATUS(1, "非默认地址");
+  DEFAULT_STATUS(0, "默认地址"),
+  NOT_DEFAULT_STATUS(1, "非默认地址");
 
-    private final Integer code;
-    private final String message;
+  private final Integer code;
+  private final String message;
 
-    AddressStatusEnum(Integer code, String message) {
-        this.code = code;
-        this.message = message;
-    }
+  AddressStatusEnum(Integer code, String message) {
+    this.code = code;
+    this.message = message;
+  }
 }

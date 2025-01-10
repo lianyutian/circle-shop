@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import github.lianyutian.cshop.user.model.po.UserAddress;
 import org.apache.ibatis.annotations.Mapper;
 
-
 /**
  * UserAddressMapper
  *
@@ -13,6 +12,4 @@ import org.apache.ibatis.annotations.Mapper;
  * @version 1.0
  */
 @Mapper
-public interface UserAddressMapper extends BaseMapper<UserAddress> {
-
-}
+public interface UserAddressMapper extends BaseMapper<UserAddress> {}

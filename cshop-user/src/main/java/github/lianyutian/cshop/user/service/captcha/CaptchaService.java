@@ -8,13 +8,12 @@ package github.lianyutian.cshop.user.service.captcha;
  * @version 1.0
  */
 public interface CaptchaService {
-
-    /**
-     * 发送验证码
-     *
-     * @param cacheKey 缓存key
-     * @param to 接收者
-     * @return 发送结果
-     */
-    boolean sendCode(String cacheKey, String to);
+  /**
+   * 发送验证码
+   *
+   * @param cacheKey 缓存key
+   * @param to 接收者
+   * @return 发送结果
+   */
+  boolean sendCode(String cacheKey, String to);
 }

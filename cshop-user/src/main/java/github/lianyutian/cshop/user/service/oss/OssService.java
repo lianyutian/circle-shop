@@ -10,12 +10,11 @@ import org.springframework.web.multipart.MultipartFile;
  * @version 1.0
  */
 public interface OssService {
-
-    /**
-     * 上传用户头像
-     *
-     * @param file 头像文件
-     * @return 头像地址
-     */
-    String uploadUserAvatar(MultipartFile file);
+  /**
+   * 上传用户头像
+   *
+   * @param file 头像文件
+   * @return 头像地址
+   */
+  String uploadUserAvatar(MultipartFile file);
 }

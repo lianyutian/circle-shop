@@ -14,7 +14,7 @@ import org.springframework.context.annotation.ComponentScan;
 @SpringBootApplication
 @ComponentScan(basePackages = {"github.lianyutian.cshop.user", "github.lianyutian.cshop.common"})
 public class UserApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(UserApplication.class, args);
-    }
+  public static void main(String[] args) {
+    SpringApplication.run(UserApplication.class, args);
+  }
 }

@@ -35,6 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 @AllArgsConstructor
 @Slf4j
 public class CaptchaController {
+
   /** 图形验证码过期时间 */
   private static final long CAPTCHA_EXPIRE_TIME = 60 * 1000 * 5;
 

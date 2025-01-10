@@ -11,14 +11,14 @@ import lombok.Getter;
  */
 @Getter
 public enum UserSexEnum {
-    FEMALE(0, "女"),
-    MALE(1, "男");
+  FEMALE(0, "女"),
+  MALE(1, "男");
 
-    private final int code;
-    private final String message;
+  private final int code;
+  private final String message;
 
-    UserSexEnum(int code, String message) {
-        this.code = code;
-        this.message = message;
-    }
+  UserSexEnum(int code, String message) {
+    this.code = code;
+    this.message = message;
+  }
 }

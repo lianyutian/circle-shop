@@ -11,43 +11,27 @@ import lombok.Data;
  */
 @Data
 public class AddressEditParam {
-    /**
-     * 地址id
-     */
-    private Long id;
+  /** 地址id */
+  private Long id;
 
-    /**
-     * 是否默认收货地址：0否 1是
-     */
-    private Integer defaultStatus;
+  /** 是否默认收货地址：0否 1是 */
+  private Integer defaultStatus;
 
-    /**
-     * 收发货人姓名
-     */
-    private String receiveName;
+  /** 收发货人姓名 */
+  private String receiveName;
 
-    /**
-     * 收货人电话
-     */
-    private String phone;
+  /** 收货人电话 */
+  private String phone;
 
-    /**
-     * 省/直辖市
-     */
-    private String province;
+  /** 省/直辖市 */
+  private String province;
 
-    /**
-     * 市
-     */
-    private String city;
+  /** 市 */
+  private String city;
 
-    /**
-     * 区
-     */
-    private String region;
+  /** 区 */
+  private String region;
 
-    /**
-     * 详细地址
-     */
-    private String detailAddress;
+  /** 详细地址 */
+  private String detailAddress;
 }
