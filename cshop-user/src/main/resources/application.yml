@@ -14,6 +14,7 @@ spring:
   # redis配置
   data:
     redis:
+      enable: true
       host: 116.198.217.158
       port: 6379
       password: MIIEowIBAAKCAQEAwG90ULRHmAXFXQzZSwleoYts2+bCzUvqhhqtGiv/F5kUsETY  # 如果有密码
