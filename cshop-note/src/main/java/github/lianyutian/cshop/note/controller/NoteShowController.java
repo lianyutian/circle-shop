@@ -1,8 +1,8 @@
 package github.lianyutian.cshop.note.controller;
 
 import github.lianyutian.cshop.common.enums.BizCodeEnum;
+import github.lianyutian.cshop.common.model.ApiResult;
 import github.lianyutian.cshop.common.model.vo.PageVO;
-import github.lianyutian.cshop.common.utils.ApiResult;
 import github.lianyutian.cshop.note.model.param.NotePageParam;
 import github.lianyutian.cshop.note.model.vo.NoteShowVO;
 import github.lianyutian.cshop.note.service.NoteShowService;

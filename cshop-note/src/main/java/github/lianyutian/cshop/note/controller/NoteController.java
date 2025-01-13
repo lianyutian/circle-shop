@@ -1,7 +1,7 @@
 package github.lianyutian.cshop.note.controller;
 
 import github.lianyutian.cshop.common.enums.BizCodeEnum;
-import github.lianyutian.cshop.common.utils.ApiResult;
+import github.lianyutian.cshop.common.model.ApiResult;
 import github.lianyutian.cshop.note.model.param.NoteAddParam;
 import github.lianyutian.cshop.note.model.param.NoteEditParam;
 import github.lianyutian.cshop.note.model.vo.NoteDetailVO;
