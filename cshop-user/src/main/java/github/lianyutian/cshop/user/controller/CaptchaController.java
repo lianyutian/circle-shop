@@ -2,7 +2,7 @@ package github.lianyutian.cshop.user.controller;
 
 import com.google.code.kaptcha.impl.DefaultKaptcha;
 import github.lianyutian.cshop.common.enums.BizCodeEnum;
-import github.lianyutian.cshop.common.utils.ApiResult;
+import github.lianyutian.cshop.common.model.ApiResult;
 import github.lianyutian.cshop.common.utils.CheckUtil;
 import github.lianyutian.cshop.common.utils.CommonUtil;
 import github.lianyutian.cshop.user.constant.UserCacheKeyConstant;
@@ -35,7 +35,6 @@ import org.springframework.web.bind.annotation.RestController;
 @AllArgsConstructor
 @Slf4j
 public class CaptchaController {
-
   /** 图形验证码过期时间 */
   private static final long CAPTCHA_EXPIRE_TIME = 60 * 1000 * 5;
 

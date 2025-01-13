@@ -1,7 +1,7 @@
 package github.lianyutian.cshop.user.controller;
 
 import github.lianyutian.cshop.common.enums.BizCodeEnum;
-import github.lianyutian.cshop.common.utils.ApiResult;
+import github.lianyutian.cshop.common.model.ApiResult;
 import github.lianyutian.cshop.user.model.param.AddressAddParam;
 import github.lianyutian.cshop.user.model.param.AddressEditParam;
 import github.lianyutian.cshop.user.model.vo.UserAddressVO;

@@ -1,6 +1,6 @@
 package github.lianyutian.cshop.user.service;
 
-import github.lianyutian.cshop.common.utils.ApiResult;
+import github.lianyutian.cshop.common.model.ApiResult;
 import github.lianyutian.cshop.user.model.param.UserEditParam;
 import github.lianyutian.cshop.user.model.param.UserLoginParam;
 import github.lianyutian.cshop.user.model.param.UserRegisterParam;
