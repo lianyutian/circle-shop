@@ -23,8 +23,8 @@ public class InterceptorConfig implements WebMvcConfigurer {
 
   @Override
   public void addInterceptors(InterceptorRegistry registry) {
-    // 添加拦截器
     registry
+        // 添加拦截器
         .addInterceptor(loginInterceptor())
         // 不需要拦截的路径
         .excludePathPatterns(

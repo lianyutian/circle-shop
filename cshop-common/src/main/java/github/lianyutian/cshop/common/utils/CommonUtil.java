@@ -1,6 +1,5 @@
 package github.lianyutian.cshop.common.utils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import github.lianyutian.cshop.common.exception.BizException;
 import github.lianyutian.cshop.common.model.ApiResult;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,8 +24,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class CommonUtil {
-  /** 单例化 ObjectMapper */
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   /** 加密串 */
   private static final String SECRET_STRING =
@@ -139,8 +136,9 @@ public class CommonUtil {
   }
 
   /**
-   * 向客户端发送HTTP响应 此方法用于将给定的ApiResult对象序列化为JSON格式，并通过 HttpServletResponse 对象将其作为HTTP响应返回给客户端
-   * 它处理响应的序列化和发送过程，并记录相关日志
+   * 向客户端发送HTTP响应 此方法用于将给定的ApiResult对象序列化为JSON格式
+   *
+   * <p>并通过 HttpServletResponse 对象将其作为HTTP响应返回给客户端 它处理响应的序列化和发送过程，并记录相关日志
    *
    * @param response 用于发送响应的 HttpServletResponse 对象
    * @param result 要序列化并发送的 ApiResult 对象
@@ -151,9 +149,9 @@ public class CommonUtil {
 
     String jsonResponse;
     try {
-      // 将ApiResult对象序列化为JSON字符串
-      jsonResponse = OBJECT_MAPPER.writeValueAsString(result);
-    } catch (IOException e) {
+      // 将 ApiResult 对象序列化为JSON字符串
+      jsonResponse = JsonUtil.toJson(result);
+    } catch (Exception e) {
       // 记录序列化异常信息
       log.warn("序列化响应数据异常：{}", e.getMessage(), e);
       // 如果序列化失败，抛出自定义异常

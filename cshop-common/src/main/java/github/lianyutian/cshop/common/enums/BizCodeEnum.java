@@ -38,7 +38,8 @@ public enum BizCodeEnum {
 
   USER_LOGIN_SUCCESS(0, "用户登录成功"),
   USER_UPDATE_LOCK_FAIL(2102006, "修改用户信息获取锁失败"),
-  USER_INFO_SHOW_LOCK_FAIL(2102007, "读取用户信息获取锁失败"),
+  USER_SHOW_LOCK_FAIL(2102007, "读取用户信息获取锁失败"),
+  USER_DETAIL_UPDATE_FAIL(2102008, "用户详情更新失败"),
 
   /** 用户微服务上传相关 2103 开头 */
   USER_AVATAR_FILE_UPLOAD_ERROR(2103001, "用户头像上传失败"),

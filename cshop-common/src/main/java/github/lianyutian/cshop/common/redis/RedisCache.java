@@ -30,13 +30,13 @@ public class RedisCache {
   public static final long UPDATE_LOCK_TIMEOUT = 200;
 
   /** 一小时有效期 */
-  public static final Integer ONE_HOUR_SECONDS = 60 * 60;
+  public static final Integer ONE_HOUR_SECONDS = 60 * 60 * 1000;
 
   /** 两天有效期 */
-  public static final Integer TWO_DAYS_SECONDS = 2 * 24 * 60 * 60;
+  public static final Integer TWO_DAYS_SECONDS = 2 * 24 * 60 * 60 * 1000;
 
   /** 一天有效期 */
-  public static final Integer ONE_DAY_SECONDS = 24 * 60 * 60;
+  public static final Integer ONE_DAY_SECONDS = 24 * 60 * 60 * 1000;
 
   public RedisCache(RedisTemplate<String, String> redisTemplate) {
     this.redisTemplate = redisTemplate;
@@ -48,7 +48,7 @@ public class RedisCache {
    * @return 返回过期时间
    */
   public static Integer generateCacheExpire() {
-    return TWO_DAYS_SECONDS + CommonUtil.genRandomInt(0, 10) * 60 * 60;
+    return TWO_DAYS_SECONDS + CommonUtil.genRandomInt(0, 10) * 60 * 60 * 1000;
   }
 
   /**
@@ -57,7 +57,7 @@ public class RedisCache {
    * @return 随机 30 - 100 秒
    */
   public static Integer generateCachePenetrationExpire() {
-    return CommonUtil.genRandomInt(30, 100);
+    return CommonUtil.genRandomInt(30, 100) * 1000;
   }
 
   /**
@@ -65,15 +65,16 @@ public class RedisCache {
    *
    * @param key key
    * @param value value
-   * @param seconds 设置过期时间
+   * @param timeOut 设置过期时间
+   * @param timeUnit 时间类型
    */
-  public void set(String key, String value, int seconds) {
+  public void set(String key, String value, long timeOut, TimeUnit timeUnit) {
     ValueOperations<String, String> op = redisTemplate.opsForValue();
     try {
-      if (seconds > 0) {
+      if (timeOut > 0) {
         // 设置缓存时间
-        op.set(key, value, seconds, TimeUnit.SECONDS);
-      } else if (seconds == 0) {
+        op.set(key, value, timeOut, timeUnit);
+      } else if (timeOut == 0) {
         // 永不过期
         op.set(key, value);
       } else {
@@ -90,12 +91,13 @@ public class RedisCache {
    *
    * @param key key
    * @param value value
-   * @param seconds 过期时间
+   * @param timeOut 过期时间
+   * @param timeUnit 时间类型
    */
-  public void set(String key, Object value, int seconds) {
+  public void set(String key, Object value, long timeOut, TimeUnit timeUnit) {
     try {
       // 先将 Object 转成 Json 字符串再进行存储
-      this.set(key, JsonUtil.toJson(value), seconds);
+      this.set(key, JsonUtil.toJson(value), timeOut, timeUnit);
     } catch (Exception e) {
       log.error("写入缓存失败, key: {}, value: [REDACTED]", key, e);
       throw new RedisCacheException("写入缓存失败", e);
@@ -137,17 +139,15 @@ public class RedisCache {
    * 设置缓存过期时间
    *
    * @param key key
-   * @param seconds 过期时间
+   * @param timeOut 过期时间
+   * @param timeUnit 时间类型
    */
-  public void expire(String key, Integer seconds) {
+  public void expire(String key, long timeOut, TimeUnit timeUnit) {
     if (key == null || key.isEmpty()) {
       throw new IllegalArgumentException("Key cannot be null or empty");
     }
-    if (seconds == null || seconds < 0) {
-      throw new IllegalArgumentException("Expiration time must be a non-negative integer");
-    }
     try {
-      redisTemplate.expire(key, seconds, TimeUnit.SECONDS);
+      redisTemplate.expire(key, timeOut, timeUnit);
     } catch (Exception e) {
       log.error("Failed to set expiration for key: {}", key, e);
       throw new RedisCacheException("Failed to set expiration for key: " + key, e);

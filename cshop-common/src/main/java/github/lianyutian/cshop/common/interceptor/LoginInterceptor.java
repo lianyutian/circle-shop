@@ -5,6 +5,7 @@ import github.lianyutian.cshop.common.model.ApiResult;
 import github.lianyutian.cshop.common.model.LoginUserInfo;
 import github.lianyutian.cshop.common.utils.CommonUtil;
 import github.lianyutian.cshop.common.utils.JWTUtil;
+import github.lianyutian.cshop.common.utils.JsonUtil;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -45,7 +46,7 @@ public class LoginInterceptor implements HandlerInterceptor {
 
     LoginUserInfo loginUserInfo = LoginUserInfo.builder().id(id).avatar(avatar).name(name).build();
     USER_THREAD_LOCAL.set(loginUserInfo);
-    log.info("登录拦截器--用户信息：{}", loginUserInfo);
+    log.info("登录拦截器--用户信息：{}", JsonUtil.toJson(loginUserInfo));
     return true;
   }
 }
