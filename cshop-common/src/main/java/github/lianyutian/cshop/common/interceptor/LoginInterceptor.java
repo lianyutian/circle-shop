@@ -1,8 +1,8 @@
 package github.lianyutian.cshop.common.interceptor;
 
 import github.lianyutian.cshop.common.enums.BizCodeEnum;
+import github.lianyutian.cshop.common.model.ApiResult;
 import github.lianyutian.cshop.common.model.LoginUserInfo;
-import github.lianyutian.cshop.common.utils.ApiResult;
 import github.lianyutian.cshop.common.utils.CommonUtil;
 import github.lianyutian.cshop.common.utils.JWTUtil;
 import io.jsonwebtoken.Claims;

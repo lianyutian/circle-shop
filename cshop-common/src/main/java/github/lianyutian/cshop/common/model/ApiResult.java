@@ -1,4 +1,4 @@
-package github.lianyutian.cshop.common.utils;
+package github.lianyutian.cshop.common.model;
 
 import github.lianyutian.cshop.common.enums.BizCodeEnum;
 import lombok.AllArgsConstructor;

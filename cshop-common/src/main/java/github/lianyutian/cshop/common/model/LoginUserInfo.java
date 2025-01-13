@@ -13,20 +13,14 @@ import lombok.Data;
 @Data
 @Builder
 public class LoginUserInfo {
-    private long id;
+  private long id;
 
-    /**
-     * 手机号
-     */
-    private String phone;
+  /** 手机号 */
+  private String phone;
 
-    /**
-     * 用户名称
-     */
-    private String name;
+  /** 用户名称 */
+  private String name;
 
-    /**
-     * 用户头像
-     */
-    private String avatar;
+  /** 用户头像 */
+  private String avatar;
 }
