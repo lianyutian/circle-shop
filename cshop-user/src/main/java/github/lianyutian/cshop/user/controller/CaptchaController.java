@@ -3,6 +3,7 @@ package github.lianyutian.cshop.user.controller;
 import com.google.code.kaptcha.impl.DefaultKaptcha;
 import github.lianyutian.cshop.common.enums.BizCodeEnum;
 import github.lianyutian.cshop.common.model.ApiResult;
+import github.lianyutian.cshop.common.redis.RedisCache;
 import github.lianyutian.cshop.common.utils.CheckUtil;
 import github.lianyutian.cshop.common.utils.CommonUtil;
 import github.lianyutian.cshop.user.constant.UserCacheKeyConstant;
@@ -17,7 +18,6 @@ import javax.imageio.ImageIO;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -41,7 +41,7 @@ public class CaptchaController {
   /** 验证码生成器 */
   private final DefaultKaptcha captchaProducer;
 
-  private final StringRedisTemplate redisTemplate;
+  private final RedisCache redisCache;
 
   private final CaptchaService captchaService;
 
@@ -58,9 +58,8 @@ public class CaptchaController {
     log.info("验证码模块-获取图形验证码文本:{}", captchaText);
 
     // 2、存储到 redis 中，并设置过期时间
-    redisTemplate
-        .opsForValue()
-        .set(getImgCaptchaKey(request), captchaText, CAPTCHA_EXPIRE_TIME, TimeUnit.MILLISECONDS);
+    redisCache.set(
+        getImgCaptchaKey(request), captchaText, CAPTCHA_EXPIRE_TIME, TimeUnit.MILLISECONDS);
 
     // 3、根据验证码文本生成图形验证码图片
     BufferedImage bufferedImage = captchaProducer.createImage(captchaText);
@@ -84,9 +83,9 @@ public class CaptchaController {
       return ApiResult.result(BizCodeEnum.USER_PHONE_ERROR);
     }
 
-    // 先从缓存中获取验证码 key - code:USER_REGISTER:电话或邮箱
+    // 先从缓存中获取验证码 key - cshop-user:register-captcha:电话或邮箱
     String cacheKey = UserCacheKeyConstant.CAPTCHA_REGISTER_KEY_PREFIX + to;
-    String registerCode = redisTemplate.opsForValue().get(cacheKey);
+    String registerCode = redisCache.get(cacheKey);
 
     // 如果不为空，则判断是否60秒内重复发送
     if (StringUtils.isNotBlank(registerCode)) {

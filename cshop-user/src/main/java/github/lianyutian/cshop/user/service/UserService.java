@@ -19,18 +19,18 @@ public interface UserService {
   /**
    * 用户注册
    *
-   * @param userRegisterVO 用户注册VO
+   * @param userRegisterParam 用户注册入参
    * @return 注册结果
    */
-  ApiResult<Void> register(UserRegisterParam userRegisterVO);
+  ApiResult<Void> register(UserRegisterParam userRegisterParam);
 
   /**
    * 用户登录
    *
-   * @param userLoginVO 用户登录VO
+   * @param userLoginParam 用户登录入参
    * @return 登录结果
    */
-  ApiResult<Map<String, Object>> login(UserLoginParam userLoginVO);
+  ApiResult<Map<String, Object>> login(UserLoginParam userLoginParam);
 
   /**
    * 刷新token

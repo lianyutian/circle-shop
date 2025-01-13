@@ -1,4 +1,4 @@
-package github.lianyutian.cshop.user.constant;
+package github.lianyutian.cshop.user.enums;
 
 import lombok.Getter;
 

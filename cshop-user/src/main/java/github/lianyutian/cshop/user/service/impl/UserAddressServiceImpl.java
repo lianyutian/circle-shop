@@ -4,7 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import github.lianyutian.cshop.common.interceptor.LoginInterceptor;
 import github.lianyutian.cshop.common.model.LoginUserInfo;
-import github.lianyutian.cshop.user.constant.AddressStatusEnum;
+import github.lianyutian.cshop.common.utils.BeanUtil;
+import github.lianyutian.cshop.user.enums.AddressStatusEnum;
 import github.lianyutian.cshop.user.mapper.UserAddressMapper;
 import github.lianyutian.cshop.user.model.param.AddressAddParam;
 import github.lianyutian.cshop.user.model.param.AddressEditParam;
@@ -16,10 +17,9 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
 
 /**
  * 用户地址服务接口实现类
@@ -37,13 +37,14 @@ public class UserAddressServiceImpl implements UserAddressService {
 
   @Override
   public UserAddressVO getUserAddressDetail(Long addressId) {
+    if (addressId == null || addressId <= 0) {
+      throw new IllegalArgumentException("Invalid addressId");
+    }
     UserAddress userAddress = userAddressMapper.selectById(addressId);
     if (userAddress == null) {
       return null;
     }
-    UserAddressVO userAddressVO = new UserAddressVO();
-    BeanUtils.copyProperties(userAddress, userAddressVO);
-    return userAddressVO;
+    return BeanUtil.copy(userAddress, UserAddressVO.class);
   }
 
   @Override
@@ -53,24 +54,24 @@ public class UserAddressServiceImpl implements UserAddressService {
         userAddressMapper.selectList(
             new LambdaQueryWrapper<UserAddress>()
                 .eq(UserAddress::getUserId, loginUserInfo.getId()));
-    if (CollectionUtils.isEmpty(userAddressList)) {
-      return List.of();
-    }
     return userAddressList.stream().map(this::convertToUserAddressVO).collect(Collectors.toList());
   }
 
   @Override
-  @Transactional(rollbackFor = Exception.class)
+  @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
   public void addUserAddress(AddressAddParam addressAddParam) {
     LoginUserInfo loginUserInfo = getLoginUserInfo();
-    UserAddress userAddress = new UserAddress();
+
+    UserAddress userAddress = BeanUtil.copy(addressAddParam, UserAddress.class);
     userAddress.setUserId(loginUserInfo.getId());
-    BeanUtils.copyProperties(addressAddParam, userAddress);
 
     setDefaultStatusIfRequired(userAddress);
 
-    int rows = userAddressMapper.insert(userAddress);
-    log.info("用户收货地址模块-新增收货地址：rows={}，data={}", rows, formatUserAddressForLog(userAddress));
+    int affectedRows = userAddressMapper.insert(userAddress);
+    log.info(
+        "用户收货地址模块-新增收货地址：affectedRows={}，data={}",
+        affectedRows,
+        formatUserAddressForLog(userAddress));
   }
 
   @Override
@@ -81,18 +82,24 @@ public class UserAddressServiceImpl implements UserAddressService {
       return false;
     }
     LoginUserInfo loginUserInfo = getLoginUserInfo();
-    UserAddress userAddress = new UserAddress();
+    UserAddress userAddress = BeanUtil.copy(addressEditParam, UserAddress.class);
     userAddress.setUserId(loginUserInfo.getId());
-    BeanUtils.copyProperties(addressEditParam, userAddress);
 
     setDefaultStatusIfRequired(userAddress);
 
-    int rows =
+    int affectedRows =
         userAddressMapper.update(
             userAddress,
             new LambdaUpdateWrapper<UserAddress>()
                 .eq(UserAddress::getId, addressEditParam.getId()));
-    log.info("用户收货地址模块-更新收货地址：rows={}，data={}", rows, formatUserAddressForLog(userAddress));
+    if (affectedRows == 0) {
+      log.warn("用户收货地址模块-更新收货地址失败：id={}", addressEditParam.getId());
+      return false;
+    }
+    log.info(
+        "用户收货地址模块-更新收货地址：affectedRows={}，data={}",
+        affectedRows,
+        formatUserAddressForLog(userAddress));
     return true;
   }
 
@@ -103,7 +110,11 @@ public class UserAddressServiceImpl implements UserAddressService {
   }
 
   private LoginUserInfo getLoginUserInfo() {
-    return LoginInterceptor.USER_THREAD_LOCAL.get();
+    LoginUserInfo loginUserInfo = LoginInterceptor.USER_THREAD_LOCAL.get();
+    if (loginUserInfo == null) {
+      throw new IllegalStateException("LoginUserInfo not found in ThreadLocal");
+    }
+    return loginUserInfo;
   }
 
   private void setDefaultStatusIfRequired(UserAddress userAddress) {
@@ -120,9 +131,7 @@ public class UserAddressServiceImpl implements UserAddressService {
   }
 
   private UserAddressVO convertToUserAddressVO(UserAddress userAddress) {
-    UserAddressVO userAddressVO = new UserAddressVO();
-    BeanUtils.copyProperties(userAddress, userAddressVO);
-    return userAddressVO;
+    return BeanUtil.copy(userAddress, UserAddressVO.class);
   }
 
   private String formatUserAddressForLog(UserAddress userAddress) {

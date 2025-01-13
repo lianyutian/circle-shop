@@ -47,7 +47,7 @@ public class UserController {
   private final UserService userService;
 
   /**
-   * 上传用户头像 默认文件大小 1M，超过报错
+   * 上传用户头像
    *
    * @param file 头像文件
    * @return 上传结果
@@ -83,19 +83,19 @@ public class UserController {
    * @return 注册结果
    */
   @PostMapping("register")
-  public ApiResult<Void> register(@RequestBody UserRegisterParam userRegisterVO) {
-    return userService.register(userRegisterVO);
+  public ApiResult<Void> register(@RequestBody UserRegisterParam userRegisterParam) {
+    return userService.register(userRegisterParam);
   }
 
   /**
    * 用户登录
    *
-   * @param userLoginVO 用户登录VO
+   * @param userLoginParam 用户登录入参
    * @return 登录结果
    */
   @PostMapping("login")
-  public ApiResult<Map<String, Object>> login(@RequestBody UserLoginParam userLoginVO) {
-    return userService.login(userLoginVO);
+  public ApiResult<Map<String, Object>> login(@RequestBody UserLoginParam userLoginParam) {
+    return userService.login(userLoginParam);
   }
 
   /**
@@ -109,6 +109,7 @@ public class UserController {
   public ApiResult<Map<String, Object>> refreshToken(
       @RequestParam(value = "refreshToken") String refreshToken,
       @RequestParam(value = "accessToken") String accessToken) {
+
     return userService.refreshToken(refreshToken, accessToken);
   }
 

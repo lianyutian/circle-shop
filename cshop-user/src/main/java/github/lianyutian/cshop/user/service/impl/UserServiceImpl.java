@@ -1,8 +1,5 @@
 package github.lianyutian.cshop.user.service.impl;
 
-import static github.lianyutian.cshop.common.utils.JWTUtil.KEY_PREFIX;
-import static github.lianyutian.cshop.common.utils.JWTUtil.REFRESH_EXPIRE;
-
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import github.lianyutian.cshop.common.enums.BizCodeEnum;
@@ -25,7 +22,6 @@ import github.lianyutian.cshop.user.model.vo.UserDetailVO;
 import github.lianyutian.cshop.user.model.vo.UserShowVO;
 import github.lianyutian.cshop.user.service.UserService;
 import io.jsonwebtoken.Claims;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
@@ -33,11 +29,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
 
 /**
  * 用户服务实现类
@@ -53,51 +47,47 @@ public class UserServiceImpl implements UserService {
 
   private final UserMapper userMapper;
 
-  private final StringRedisTemplate redisTemplate;
+  private final RedisCache redisCache;
 
   private final PasswordEncoder passwordEncoder;
-
-  private final RedisCache redisCache;
 
   private final RedisLock redisLock;
 
   @Override
   @Transactional
-  public ApiResult<Void> register(UserRegisterParam userRegisterVO) {
+  public ApiResult<Void> register(UserRegisterParam userRegisterParam) {
     // 1. 校验注册验证码是否正确
-    boolean checked = checkCode(userRegisterVO.getPhone(), userRegisterVO.getCode());
+    boolean checked = checkCode(userRegisterParam.getPhone(), userRegisterParam.getCode());
     if (!checked) {
       return ApiResult.result(BizCodeEnum.USER_CODE_PHONE_ERROR);
     }
     // 1.2 通过手机号唯一索引实现唯一
-    User user = new User();
-    BeanUtils.copyProperties(userRegisterVO, user);
+    User user = BeanUtil.copy(userRegisterParam, User.class);
     // 密码加密
-    String secretPwd = passwordEncoder.encode(userRegisterVO.getPassword());
+    String secretPwd = passwordEncoder.encode(userRegisterParam.getPassword());
     user.setPwd(secretPwd);
     try {
       userMapper.insert(user);
     } catch (DuplicateKeyException e) {
-      log.warn("用户微服务-注册模块-用户已存在 {}", userRegisterVO.getPhone());
+      log.error("用户微服务-注册模块-用户已存在 {}", userRegisterParam.getPhone());
       return ApiResult.result(BizCodeEnum.USER_ACCOUNT_EXIST);
     }
     return ApiResult.success();
   }
 
   @Override
-  public ApiResult<Map<String, Object>> login(UserLoginParam userLoginVO) {
-    // 1. 根据手机号查询是否存在
+  public ApiResult<Map<String, Object>> login(UserLoginParam userLoginParam) {
+    // 根据手机号查询是否存在
     LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
-    queryWrapper.eq(User::getPhone, userLoginVO.getPhone());
-    List<User> userList = userMapper.selectList(queryWrapper);
-    if (CollectionUtils.isEmpty(userList)) {
+    queryWrapper.eq(User::getPhone, userLoginParam.getPhone());
+    User user = userMapper.selectOne(queryWrapper);
+    if (user == null) {
       // 未注册
       return ApiResult.result(BizCodeEnum.USER_ACCOUNT_PWD_ERROR);
     }
 
-    // 1.1 该手机号已经注册了
-    User user = userList.get(0);
-    if (passwordEncoder.matches(userLoginVO.getPassword(), user.getPwd())) {
+    // 校验密码
+    if (passwordEncoder.matches(userLoginParam.getPassword(), user.getPwd())) {
       // 登录成功，生成 jwt
       Map<String, Object> jwt = createNewJwt(user);
       return ApiResult.success(jwt);
@@ -108,12 +98,12 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public ApiResult<Map<String, Object>> refreshToken(String refreshToken, String accessToken) {
-    String refreshTokenVal = redisTemplate.opsForValue().get(KEY_PREFIX + refreshToken);
+    String refreshTokenVal = redisCache.get(JWTUtil.KEY_PREFIX + refreshToken);
     // refreshToken 过期
     if (StringUtils.isBlank(refreshTokenVal)) {
       return ApiResult.result(BizCodeEnum.USER_REFRESH_TOKEN_EMPTY);
     }
-    // 2、如果存在，解密 accessToken
+    // 2、如果 refreshToken 存在，解密 accessToken
     Claims claims = JWTUtil.parserToken(accessToken);
     if (claims == null) {
       // 无法解密提示未登录
@@ -127,7 +117,7 @@ public class UserServiceImpl implements UserService {
     if (user != null) {
       Map<String, Object> jwt = createNewJwt(user);
       // 删除旧的 refreshToken
-      redisTemplate.opsForValue().getAndDelete(KEY_PREFIX + refreshToken);
+      redisCache.delete(JWTUtil.KEY_PREFIX + refreshToken);
       return ApiResult.success(jwt);
     } else {
       // 无法解密提示未登录
@@ -154,7 +144,8 @@ public class UserServiceImpl implements UserService {
     redisCache.set(
         UserCacheKeyConstant.USER_DETAIL_KEY_PREFIX + loginUserInfo.getId(),
         userDetailVO,
-        RedisCache.generateCacheExpire());
+        RedisCache.generateCacheExpire(),
+        TimeUnit.MILLISECONDS);
     log.info("用户模块-缓存用户信息：{}", JsonUtil.toJson(user));
 
     return userDetailVO;
@@ -172,8 +163,8 @@ public class UserServiceImpl implements UserService {
           redisLock.lock(UserCacheKeyConstant.USER_UPDATE_LOCK_KEY_PREFIX + loginUserInfo.getId());
 
       if (!locked) {
-        log.warn("用户模块-修改用户信息：用户 {} 获取锁失败", loginUserInfo.getId());
-        throw new BizException(BizCodeEnum.USER_UPDATE_LOCK_FAIL);
+        log.error("用户模块-修改用户信息：用户 {} 获取锁失败", loginUserInfo.getId());
+        throw new BizException(BizCodeEnum.USER_DETAIL_UPDATE_FAIL);
       }
       // 先删掉缓存，防止出现数据库更新成功但是更新缓存失败，获取用户信息时一直都是缓存的数据
       redisCache.delete(UserCacheKeyConstant.USER_SHOW_KEY_PREFIX + loginUserInfo.getId());
@@ -194,13 +185,15 @@ public class UserServiceImpl implements UserService {
       redisCache.set(
           UserCacheKeyConstant.USER_SHOW_KEY_PREFIX + loginUserInfo.getId(),
           userShowVO,
-          RedisCache.generateCacheExpire());
+          RedisCache.generateCacheExpire(),
+          TimeUnit.MILLISECONDS);
 
       UserDetailVO userDetailVO = BeanUtil.copy(newUser, UserDetailVO.class);
       redisCache.set(
           UserCacheKeyConstant.USER_DETAIL_KEY_PREFIX + loginUserInfo.getId(),
           userDetailVO,
-          RedisCache.generateCacheExpire());
+          RedisCache.generateCacheExpire(),
+          TimeUnit.MILLISECONDS);
     } finally {
       if (locked) {
         redisLock.unlock(UserCacheKeyConstant.USER_UPDATE_LOCK_KEY_PREFIX + loginUserInfo.getId());
@@ -211,17 +204,25 @@ public class UserServiceImpl implements UserService {
   /**
    * 用户展示信息
    *
-   * <p>1.假如用户Z发布了一篇内容突然爆火，同一时刻有上万用户来查看用户Z的个人信息，此时就会存在同一时刻会有超大并发流量进入该接口
+   * <p>1.假如 用户Z 发布了一篇内容突然爆火，同一时刻有上万用户来查看 用户Z 的个人信息，此时就会存在同一时刻会有超大并发流量进入该接口
    *
-   * <p>2.如果有恶意用户大批量使用不存在的用户id来查询，就会造成缓存穿透，大量请求击穿的 DB 层。
+   * <p>2.如果有恶意用户大批量使用不存在的 用户id 来查询，就会造成缓存穿透，大量请求击穿的 DB 层。
    *
-   * <p>3.如果用户Z在这个时刻修改了自己的信息，怎么保证其他用户查询到的是最新的信息，怎么保证缓存和数据库的数据一致性
+   * <p>3.如果 用户Z 在这个时刻修改了自己的信息，怎么保证其他用户查询到的是最新的信息，怎么保证缓存和数据库的数据一致性
    *
-   * <p>- 例如用户A来查询用户Z的信息，同时用户Z修改自身信息
-   * 场景：此时缓存中用户Z信息刚好过期，那么此时会去查数据库，这个时候用户Z还没将修改后的信息保存到数据库中所以用户A拿到的是旧的数据
-   * 再假设此时执行用户A查询信息的线程没抢到CPU资源先阻塞住了，这个时候用户Z已经修改完自身信息并保存。这个时候会去数据中刷新
-   * 自身数据并同步刷新到缓存中。再执行完成这一步后，用户A的线程才继续执行，此时用户A拿到的还是旧的数据，这个时候也会去刷新缓存 那么此时缓存中的数据和数据库的数据就是不一致的。
-   * 解决方案：更新用户接口也加 同 一把分布式锁，保证读写串行。用户更新自身信息是占比很少的写操作，这里考虑的是极端场景
+   * <p>场景：例如 线程A 来查询 用户Z 的信息，同时 线程B 修改 用户Z 信息且此时缓存中 用户Z 信息刚好过期。
+   *
+   * <p>那么此时 线程A 会去查数据库，这个时候 线程B 还没将 用户Z 修改后的信息保存到数据库中。
+   *
+   * <p>所以 线程A 拿到的是旧的数据，再假设此时 线程A 没抢到 CPU 资源阻塞住了。
+   *
+   * <p>这个时候 线程B 已经修改完自身信息并保存入数据库，同时会将新数据刷新到缓存中。
+   *
+   * <p>再执行完成这一步后，线程A 才继续执行，此时 线程A 拿到的还是旧的数据，也会去刷新缓存。
+   *
+   * <p>那么此时缓存中的数据是 线程A 在 线程B 更新前的旧数据，数据库中是 线程B 更新的新数据。
+   *
+   * <p>解决方案：更新用户接口也加 同 一把分布式锁，保证读写串行。用户更新自身信息是占比很少的写操作，这里考虑的是极端场景
    *
    * @param userId 用户id
    * @return 用户展示信息
@@ -244,7 +245,7 @@ public class UserServiceImpl implements UserService {
     log.info("用户模块-从缓存中获取用户信息：{}", userDetail);
     if (StringUtils.isNotBlank(userDetail)) {
       // 缓存延期
-      redisCache.expire(key, RedisCache.generateCacheExpire());
+      redisCache.expire(key, RedisCache.generateCacheExpire(), TimeUnit.MILLISECONDS);
       return JsonUtil.fromJson(userDetail, UserDetailVO.class);
     }
     return null;
@@ -256,7 +257,7 @@ public class UserServiceImpl implements UserService {
     log.info("用户模块-从缓存中获取用户展示信息：{}", userShow);
     if (StringUtils.isNotBlank(userShow)) {
       // 缓存延期
-      redisCache.expire(key, RedisCache.generateCacheExpire());
+      redisCache.expire(key, RedisCache.generateCacheExpire(), TimeUnit.MILLISECONDS);
       return JsonUtil.fromJson(userShow, UserShowVO.class);
     }
     return null;
@@ -287,7 +288,8 @@ public class UserServiceImpl implements UserService {
         redisCache.set(
             UserCacheKeyConstant.USER_SHOW_KEY_PREFIX + userId,
             RedisCache.EMPTY_CACHE,
-            RedisCache.generateCachePenetrationExpire());
+            RedisCache.generateCachePenetrationExpire(),
+            TimeUnit.MILLISECONDS);
         return null;
       }
       UserShowVO userShowVO = BeanUtil.copy(user, UserShowVO.class);
@@ -295,7 +297,8 @@ public class UserServiceImpl implements UserService {
       redisCache.set(
           UserCacheKeyConstant.USER_SHOW_KEY_PREFIX + userId,
           userShowVO,
-          RedisCache.generateCacheExpire());
+          RedisCache.generateCacheExpire(),
+          TimeUnit.MILLISECONDS);
       return userShowVO;
     } catch (InterruptedException e) {
       // 加锁失败
@@ -305,7 +308,7 @@ public class UserServiceImpl implements UserService {
         return userShowFromCache;
       }
       log.error("【getUserShowFromDB】尝试加锁异常，异常信息：{}", e.getMessage(), e);
-      throw new BizException(BizCodeEnum.USER_INFO_SHOW_LOCK_FAIL);
+      throw new BizException(BizCodeEnum.USER_SHOW_LOCK_FAIL);
     } finally {
       if (tryLocked) {
         redisLock.unlock(userUpdateLockKey);
@@ -314,9 +317,9 @@ public class UserServiceImpl implements UserService {
   }
 
   private boolean checkCode(String phone, String code) {
-    // 先从缓存中获取验证码 key - code:USER_REGISTER:电话或邮箱
+    // 先从缓存中获取验证码 key - cshop-user:register-captcha:电话
     String cacheKey = UserCacheKeyConstant.CAPTCHA_REGISTER_KEY_PREFIX + phone;
-    String codeVal = redisTemplate.opsForValue().get(cacheKey);
+    String codeVal = redisCache.get(cacheKey);
     if (StringUtils.isBlank(codeVal)) {
       return false;
     }
@@ -324,7 +327,7 @@ public class UserServiceImpl implements UserService {
     String registerCode = parts[0];
     if (registerCode.equals(code)) {
       // 删除验证码，确保验证码不可以重复使用
-      redisTemplate.opsForValue().getAndDelete(cacheKey);
+      redisCache.delete(cacheKey);
       return true;
     }
     return false;
@@ -332,14 +335,14 @@ public class UserServiceImpl implements UserService {
 
   private Map<String, Object> createNewJwt(User user) {
     // 登录成功，生成 Token
-    LoginUserInfo loginUserInfo = LoginUserInfo.builder().build();
+    LoginUserInfo loginUserInfo = BeanUtil.copy(user, LoginUserInfo.class);
     BeanUtils.copyProperties(user, loginUserInfo);
     // 生成 JWT Token，过期时间
     Map<String, Object> jwt = JWTUtil.createJwt(loginUserInfo);
     // 4、设置 RefreshToken 到 Redis 中，过期时间为 30 天
     String newRefreshToken = (String) jwt.get("RefreshToken");
-    String key = KEY_PREFIX + newRefreshToken;
-    redisTemplate.opsForValue().set(key, "1", REFRESH_EXPIRE, TimeUnit.MILLISECONDS);
+    String key = JWTUtil.KEY_PREFIX + newRefreshToken;
+    redisCache.set(key, "1", JWTUtil.REFRESH_EXPIRE, TimeUnit.MILLISECONDS);
     return jwt;
   }
 }
