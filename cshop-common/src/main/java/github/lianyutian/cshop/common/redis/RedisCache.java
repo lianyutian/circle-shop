@@ -2,9 +2,11 @@ package github.lianyutian.cshop.common.redis;
 
 import github.lianyutian.cshop.common.utils.CommonUtil;
 import github.lianyutian.cshop.common.utils.JsonUtil;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Component;
@@ -211,6 +213,38 @@ public class RedisCache {
     } catch (Exception e) {
       log.error("Failed to increment value for key: {}", key, e);
       throw new RedisCacheException("Failed to increment value for key: " + key, e);
+    }
+  }
+
+  /**
+   * 获取 key 缓存所有列表
+   *
+   * @param key key
+   * @return 缓存列表
+   */
+  public List<String> listAll(String key) {
+    try {
+      ListOperations<String, String> listOperations = redisTemplate.opsForList();
+      return listOperations.range(key, 0, -1);
+    } catch (Exception e) {
+      log.error("Failed to list all values for key: {}", key, e);
+      throw new RedisCacheException("Failed to list all values for key: " + key, e);
+    }
+  }
+
+  /**
+   * 添加到列表
+   *
+   * @param key key
+   * @param value value
+   */
+  public void pushToList(String key, String value) {
+    try {
+      ListOperations<String, String> listOperations = redisTemplate.opsForList();
+      listOperations.rightPush(key, value);
+    } catch (Exception e) {
+      log.error("Failed to add value to list for key: {}", key, e);
+      throw new RedisCacheException("Failed to add value to list for key: " + key, e);
     }
   }
 }
