@@ -14,7 +14,6 @@ spring:
   # redis配置
   data:
     redis:
-      enable: true
       host: 116.198.217.158
       port: 6379
       password: MIIEowIBAAKCAQEAwG90ULRHmAXFXQzZSwleoYts2+bCzUvqhhqtGiv/F5kUsETY  # 如果有密码
@@ -35,3 +34,9 @@ logging:
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# rocketmq配置
+rocketmq:
+  accessKey: mqadmin
+  secretKey: MIIEowIBAAKCAQEAwG90ULRHmAXFXQzZSwleoYts2+bCzUvqhhqtGiv/F5kUsETY
+  nameServer: 116.198.217.158:9876

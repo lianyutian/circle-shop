@@ -11,16 +11,23 @@ import github.lianyutian.cshop.common.redis.RedisLock;
 import github.lianyutian.cshop.common.utils.BeanUtil;
 import github.lianyutian.cshop.common.utils.JsonUtil;
 import github.lianyutian.cshop.note.constant.NoteCacheKeyConstant;
+import github.lianyutian.cshop.note.constant.NoteRocketMQConstant;
+import github.lianyutian.cshop.note.enums.NoteMessageType;
 import github.lianyutian.cshop.note.enums.NoteStatusEnum;
 import github.lianyutian.cshop.note.mapper.NoteMapper;
 import github.lianyutian.cshop.note.model.param.NoteAddParam;
 import github.lianyutian.cshop.note.model.param.NoteEditParam;
 import github.lianyutian.cshop.note.model.po.Note;
 import github.lianyutian.cshop.note.model.vo.NoteDetailVO;
+import github.lianyutian.cshop.note.model.vo.NoteShowVO;
+import github.lianyutian.cshop.note.mq.message.NoteUpdateMessage;
+import github.lianyutian.cshop.note.mq.producer.NoteTransactionProducer;
 import github.lianyutian.cshop.note.service.NoteService;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,28 +49,39 @@ public class NoteServiceImpl implements NoteService {
 
   private final RedisCache redisCache;
 
+  private final NoteTransactionProducer noteTransactionProducer;
+
   @Override
   @Transactional(rollbackFor = Exception.class)
   public int addNote(NoteAddParam noteAddParam) {
     LoginUserInfo loginUserInfo = LoginInterceptor.USER_THREAD_LOCAL.get();
     Note note = BeanUtil.copy(noteAddParam, Note.class);
     note.setUserId(loginUserInfo.getId());
-    note.setStatus(NoteStatusEnum.AUDITING);
+    // note.setStatus(NoteStatusEnum.AUDITING);
+    note.setStatus(NoteStatusEnum.PUBLISHED);
+    note.setPublishTime(new Date());
 
-    if (noteAddParam.getPublishTime() != null) {
-      // TODO 后续做定时发布功能
-      note.setPublishTime(new Date());
-    } else {
-      note.setPublishTime(new Date());
+    int row;
+    try {
+      row = noteMapper.insert(note);
+
+      if (row > 0) {
+        try {
+          redisCache.increment(
+              NoteCacheKeyConstant.NOTE_TOTAL_KEY_PREFIX + loginUserInfo.getId(), 1);
+          // 不能因为消息发送失败导致笔记新增失败
+          // TODO 需要定时任务扫描新增笔记来兜底分页刷新
+          publishNoteAddedEvent(note.getId(), loginUserInfo.getId());
+        } catch (Exception e) {
+          log.error("redis or mq error {}", e.getMessage(), e);
+        }
+      }
+    } catch (Exception e) {
+      log.error("db addNote error {}", e.getMessage(), e);
+      throw new BizException(BizCodeEnum.NOTE_ADD_FAIL);
     }
-
-    int row = noteMapper.insert(note);
-
-    if (row > 0) {
-      redisCache.increment(NoteCacheKeyConstant.NOTE_TOTAL_KEY_PREFIX + loginUserInfo.getId(), 1);
-    }
-
     log.info("笔记服务-新增笔记：rows={}，data={}", row, JsonUtil.toJson(noteAddParam));
+
     return row;
   }
 
@@ -90,8 +108,6 @@ public class NoteServiceImpl implements NoteService {
         log.info("笔记模块-用户修改笔记信息：用户 {} 获取锁失败, 笔记 {}", loginUserInfo.getId(), noteEditParam.getId());
         throw new BizException(BizCodeEnum.NOTE_UPDATE_LOCK_FAIL);
       }
-      // 先删掉缓存，防止出现数据库更新成功但是更新缓存失败，获取用户信息时一直都是缓存的数据
-      redisCache.delete(NoteCacheKeyConstant.NOTE_DETAIL_KEY_PREFIX + noteEditParam.getId());
 
       Note updateNote = BeanUtil.copy(noteEditParam, Note.class);
 
@@ -102,8 +118,18 @@ public class NoteServiceImpl implements NoteService {
                   .eq(Note::getId, noteEditParam.getId())
                   .eq(Note::getUserId, loginUserInfo.getId()));
 
+      if (row > 0) {
+        updateNoteCache(noteEditParam.getId());
+        publishNoteUpdatedEvent(noteEditParam.getId(), loginUserInfo.getId());
+      }
       log.info("笔记服务-更新笔记：row={}, data={}", row, JsonUtil.toJson(noteEditParam));
       return row;
+    } catch (Exception e) {
+      log.error("updateNote error {}", e.getMessage(), e);
+      // 删掉缓存
+      redisCache.delete(NoteCacheKeyConstant.NOTE_SHOW_KEY_PREFIX + noteEditParam.getId());
+      redisCache.delete(NoteCacheKeyConstant.NOTE_DETAIL_KEY_PREFIX + noteEditParam.getId());
+      throw new BizException(BizCodeEnum.NOTE_UPDATE_FAIL);
     } finally {
       if (locked) {
         redisLock.unlock(noteUpdateLockKey);
@@ -121,6 +147,14 @@ public class NoteServiceImpl implements NoteService {
   public NoteDetailVO getNoteDetail(Long noteId) {
     LoginUserInfo loginUserInfo = LoginInterceptor.USER_THREAD_LOCAL.get();
 
+    String noteDetailKey = NoteCacheKeyConstant.NOTE_DETAIL_KEY_PREFIX + noteId;
+
+    NoteDetailVO noteDetailFromCache = getNoteDetailFromCache(noteDetailKey);
+
+    if (noteDetailFromCache != null) {
+      return noteDetailFromCache;
+    }
+
     Note note =
         noteMapper.selectOne(
             new LambdaQueryWrapper<Note>()
@@ -129,6 +163,57 @@ public class NoteServiceImpl implements NoteService {
     if (note == null) {
       return null;
     }
-    return BeanUtil.copy(note, NoteDetailVO.class);
+    NoteDetailVO noteDetailVO = BeanUtil.copy(note, NoteDetailVO.class);
+    redisCache.set(
+        noteDetailKey, noteDetailVO, RedisCache.generateCacheExpire(), TimeUnit.MILLISECONDS);
+
+    return noteDetailVO;
+  }
+
+  private NoteDetailVO getNoteDetailFromCache(String noteDetailKey) {
+    String noteDetailFromCache = redisCache.get(noteDetailKey);
+
+    if (StringUtils.isNotBlank(noteDetailFromCache)) {
+      Long expire = redisCache.getExpire(noteDetailKey, TimeUnit.SECONDS);
+      // 如果过期时间已经在 1 小时内了就自动延期
+      if (expire < RedisCache.ONE_HOUR_SECONDS) {
+        // 缓存精准自动延期 2天 + 随机几个小时
+        redisCache.expire(noteDetailKey, RedisCache.generateCacheExpire(), TimeUnit.MILLISECONDS);
+      }
+      log.info("noteDetailFromCache={}", noteDetailFromCache);
+      return JsonUtil.fromJson(noteDetailFromCache, NoteDetailVO.class);
+    }
+    return null;
+  }
+
+  private void updateNoteCache(Long noteId) {
+    String noteDetailKey = NoteCacheKeyConstant.NOTE_DETAIL_KEY_PREFIX + noteId;
+    String noteShowKey = NoteCacheKeyConstant.NOTE_SHOW_KEY_PREFIX + noteId;
+
+    Note note = noteMapper.selectById(noteId);
+    NoteDetailVO noteDetailVO = BeanUtil.copy(note, NoteDetailVO.class);
+    NoteShowVO noteShowVO = BeanUtil.copy(note, NoteShowVO.class);
+
+    redisCache.set(
+        noteDetailKey, noteDetailVO, RedisCache.generateCacheExpire(), TimeUnit.MILLISECONDS);
+    redisCache.set(
+        noteShowKey, noteShowVO, RedisCache.generateCacheExpire(), TimeUnit.MILLISECONDS);
+  }
+
+  private void publishNoteAddedEvent(Long noteId, Long userId) {
+    noteTransactionProducer.sendTransactionMessage(
+        NoteRocketMQConstant.NOTE_UPDATE_TOPIC,
+        NoteMessageType.ADD_NOTE.getType(),
+        JsonUtil.toJson(NoteUpdateMessage.builder().noteId(noteId).userId(userId).build()),
+        null,
+        NoteMessageType.ADD_NOTE);
+  }
+
+  private void publishNoteUpdatedEvent(Long noteId, Long userId) {
+    noteTransactionProducer.sendMessage(
+        NoteRocketMQConstant.NOTE_UPDATE_TOPIC,
+        NoteMessageType.UPDATE_NOTE.getType(),
+        JsonUtil.toJson(NoteUpdateMessage.builder().noteId(noteId).userId(userId).build()),
+        NoteMessageType.UPDATE_NOTE);
   }
 }

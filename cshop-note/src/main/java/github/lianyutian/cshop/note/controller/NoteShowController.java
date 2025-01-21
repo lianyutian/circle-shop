@@ -7,6 +7,8 @@ import github.lianyutian.cshop.note.model.param.NotePageParam;
 import github.lianyutian.cshop.note.model.vo.NoteShowVO;
 import github.lianyutian.cshop.note.service.NoteShowService;
 import lombok.AllArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,8 +34,8 @@ public class NoteShowController {
    * @param noteId 笔记ID
    * @return 笔记详情
    */
-  @PostMapping("detail/show")
-  public ApiResult<NoteShowVO> getNoteShow(@RequestBody Long noteId) {
+  @GetMapping("detail/show/{noteId}")
+  public ApiResult<NoteShowVO> getNoteShow(@PathVariable("noteId") Long noteId) {
     if (noteId == null) {
       return ApiResult.result(BizCodeEnum.COMMON_PARAM_ERROR);
     }

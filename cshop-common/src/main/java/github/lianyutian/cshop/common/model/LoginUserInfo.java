@@ -23,4 +23,13 @@ public class LoginUserInfo {
 
   /** 用户头像 */
   private String avatar;
+
+  public LoginUserInfo() {}
+
+  public LoginUserInfo(long id, String phone, String name, String avatar) {
+    this.id = id;
+    this.phone = phone;
+    this.name = name;
+    this.avatar = avatar;
+  }
 }

@@ -26,7 +26,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  */
 @Configuration
 @ConditionalOnClass(RedisConnectionFactory.class)
-@ConditionalOnProperty(prefix = "spring.data.redis", name = "enable", havingValue = "true")
+@ConditionalOnProperty(prefix = "spring.data.redis", name = "host")
 public class RedisConfig {
 
   @Value("${spring.data.redis.host}")

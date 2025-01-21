@@ -65,7 +65,7 @@ public class NoteController {
   }
 
   /**
-   * 获取笔记详情
+   * 获取我的笔记详情
    *
    * @param noteId noteId
    * @return 笔记详情信息

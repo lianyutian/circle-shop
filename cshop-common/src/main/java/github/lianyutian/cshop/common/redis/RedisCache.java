@@ -26,6 +26,8 @@ public class RedisCache {
   /** 缓存空数据 */
   public static final String EMPTY_CACHE = "{}";
 
+  public static final String EMPTY_ARRAY_CACHE = "[]";
+
   /** 分布式锁加锁时间 200 毫秒 */
   public static final long UPDATE_LOCK_TIMEOUT = 200;
 

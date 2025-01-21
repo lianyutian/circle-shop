@@ -71,4 +71,8 @@ public class PageParam {
   public <T> Page<T> toMpPageDefaultSortByCreateTimeDesc() {
     return toMpPage("create_time", false);
   }
+
+  public <T> Page<T> toMpPageSortByUpdateTimeDesc() {
+    return toMpPage("update_time", false);
+  }
 }

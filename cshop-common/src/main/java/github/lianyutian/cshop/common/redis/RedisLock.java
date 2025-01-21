@@ -80,6 +80,20 @@ public class RedisLock {
   }
 
   /**
+   * 阻塞加锁
+   *
+   * @param key key
+   * @return 加锁结果
+   */
+  public boolean blockedLock(String key) {
+    // 先获取分布式锁
+    RLock rLock = redissonClient.getLock(key);
+    // 阻塞加锁, 拿不到锁会一直等待
+    rLock.lock();
+    return true;
+  }
+
+  /**
    * 手动释放锁
    *
    * @param key key

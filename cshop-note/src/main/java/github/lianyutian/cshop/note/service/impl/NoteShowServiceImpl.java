@@ -45,12 +45,17 @@ public class NoteShowServiceImpl implements NoteShowService {
 
   @Override
   public NoteShowVO getNoteShow(Long noteId) {
-    String noteDetailKey = NoteCacheKeyConstant.NOTE_DETAIL_KEY_PREFIX + noteId;
-    NoteShowVO noteDetailFromCache = getNoteShowFromCache(noteDetailKey);
+    String noteShowKey = NoteCacheKeyConstant.NOTE_SHOW_KEY_PREFIX + noteId;
+    NoteShowVO noteDetailFromCache = getNoteShowFromCache(noteShowKey);
     if (noteDetailFromCache != null) {
       return noteDetailFromCache;
     }
-    return getNoteShowFromDB(noteDetailKey, noteId);
+    NoteShowVO noteShowFromDB = getNoteShowFromDB(noteShowKey, noteId);
+    if (noteShowFromDB != null) {
+      redisCache.set(
+          noteShowKey, noteShowFromDB, RedisCache.generateCacheExpire(), TimeUnit.MILLISECONDS);
+    }
+    return noteShowFromDB;
   }
 
   @Override
@@ -58,7 +63,7 @@ public class NoteShowServiceImpl implements NoteShowService {
     // 从缓存查询分页数据
     List<NoteShowVO> noteListFromCache =
         getNoteShowListFromCache(
-            NoteCacheKeyConstant.NOTE_PAGE_INFO_KEY_PREFIX
+            NoteCacheKeyConstant.NOTE_SHOW_PAGE_KEY_PREFIX
                 + notePageParam.getUserId()
                 + ":"
                 + notePageParam.getPageNo());
@@ -73,17 +78,18 @@ public class NoteShowServiceImpl implements NoteShowService {
     return null;
   }
 
-  private NoteShowVO getNoteShowFromCache(String noteDetailKey) {
-    String noteDetailFromCache = redisCache.get(noteDetailKey);
+  private NoteShowVO getNoteShowFromCache(String noteShowKey) {
+    String noteShowFromCache = redisCache.get(noteShowKey);
 
-    if (StringUtils.isNotBlank(noteDetailFromCache)) {
-      Long expire = redisCache.getExpire(noteDetailKey, TimeUnit.SECONDS);
+    if (StringUtils.isNotBlank(noteShowFromCache)) {
+      Long expire = redisCache.getExpire(noteShowKey, TimeUnit.SECONDS);
       // 如果过期时间已经在 1 小时内了就自动延期
       if (expire < RedisCache.ONE_HOUR_SECONDS) {
         // 缓存精准自动延期 2天 + 随机几个小时
-        redisCache.expire(noteDetailKey, RedisCache.generateCacheExpire());
+        redisCache.expire(noteShowKey, RedisCache.generateCacheExpire(), TimeUnit.MILLISECONDS);
       }
-      return JsonUtil.fromJson(noteDetailFromCache, NoteShowVO.class);
+      log.info("noteShowFromCache={}", noteShowFromCache);
+      return JsonUtil.fromJson(noteShowFromCache, NoteShowVO.class);
     }
     return null;
   }
@@ -114,10 +120,13 @@ public class NoteShowServiceImpl implements NoteShowService {
                   .eq(Note::getId, noteId)
                   .eq(Note::getStatus, NoteStatusEnum.PUBLISHED.getCode()));
       if (note == null) {
-        log.warn("【getNoteShowDetail】笔记不存在 {}", noteId);
+        log.warn("【getNoteShowFromDB】笔记不存在 {}", noteId);
         // 防止同时间大量无效 noteId 穿透缓存打到数据库造成缓存穿透
         redisCache.set(
-            noteDetailKey, RedisCache.EMPTY_CACHE, RedisCache.generateCachePenetrationExpire());
+            noteDetailKey,
+            RedisCache.EMPTY_CACHE,
+            RedisCache.generateCachePenetrationExpire(),
+            TimeUnit.MILLISECONDS);
         return null;
       }
       return BeanUtil.copy(note, NoteShowVO.class);
@@ -126,7 +135,7 @@ public class NoteShowServiceImpl implements NoteShowService {
       if (noteDetailFromCache != null) {
         return noteDetailFromCache;
       }
-      log.error("【getNoteShowDetail】尝试加锁异常，异常信息：{}", e.getMessage(), e);
+      log.error("【getNoteShow】尝试加锁异常，异常信息：{}", e.getMessage(), e);
       throw new BizException(BizCodeEnum.NOTE_INFO_LOCK_FAIL);
     } finally {
       if (locked) {
@@ -149,7 +158,7 @@ public class NoteShowServiceImpl implements NoteShowService {
       // 如果过期时间已经在 1 小时内了就自动延期
       if (expire < RedisCache.ONE_HOUR_SECONDS) {
         // 缓存精准自动延期 2天 + 随机几个小时
-        redisCache.expire(notePageInfoKey, RedisCache.generateCacheExpire());
+        redisCache.expire(notePageInfoKey, RedisCache.generateCacheExpire(), TimeUnit.MILLISECONDS);
       }
       return JsonUtil.fromJson(cachePageInfo, List.class);
     }
@@ -162,14 +171,14 @@ public class NoteShowServiceImpl implements NoteShowService {
     String noteUpdateLockKey = NoteCacheKeyConstant.NOTE_UPDATE_LOCK_KEY_PREFIX + userId;
     boolean tryLocked = false;
     // 笔记分页缓存 key
-    String notePageInfoKey =
-        NoteCacheKeyConstant.NOTE_PAGE_INFO_KEY_PREFIX + userId + ":" + notePageParam.getPageNo();
+    String notePageKey =
+        NoteCacheKeyConstant.NOTE_SHOW_PAGE_KEY_PREFIX + userId + ":" + notePageParam.getPageNo();
     try {
       tryLocked = redisLock.tryLock(noteUpdateLockKey, RedisCache.UPDATE_LOCK_TIMEOUT);
 
       if (!tryLocked) {
         /* 尝试加锁时间有 RedisCache.UPDATE_LOCK_TIMEOUT 有可能其他线程已经获取数据并写入缓存了所以这里再尝试去读下缓存 */
-        List<NoteShowVO> noteListFromCache = getNoteShowListFromCache(notePageInfoKey);
+        List<NoteShowVO> noteListFromCache = getNoteShowListFromCache(notePageKey);
         if (!CollectionUtils.isEmpty(noteListFromCache)) {
           return noteListFromCache;
         }
@@ -182,23 +191,24 @@ public class NoteShowServiceImpl implements NoteShowService {
       lambdaQueryWrapper
           .eq(Note::getUserId, userId)
           .eq(Note::getStatus, NoteStatusEnum.PUBLISHED)
-          .orderByAsc(Note::getCreateTime);
+          .orderByDesc(Note::getUpdateTime);
 
-      Page<Note> notePage =
-          noteMapper.selectPage(
-              notePageParam.toMpPageDefaultSortByCreateTimeDesc(), lambdaQueryWrapper);
+      Page<Note> notePage = noteMapper.selectPage(notePageParam.toMpPage(), lambdaQueryWrapper);
 
       List<NoteShowVO> noteShowList = BeanUtil.copyList(notePage.getRecords(), NoteShowVO.class);
 
       if (CollectionUtils.isEmpty(noteShowList)) {
         // 防止缓存穿透
         redisCache.set(
-            notePageInfoKey, RedisCache.EMPTY_CACHE, RedisCache.generateCachePenetrationExpire());
+            notePageKey,
+            RedisCache.EMPTY_ARRAY_CACHE,
+            RedisCache.generateCachePenetrationExpire(),
+            TimeUnit.MILLISECONDS);
         return null;
       }
 
       redisCache.set(
-          notePageInfoKey, JsonUtil.toJson(noteShowList), RedisCache.generateCacheExpire());
+          notePageKey, noteShowList, RedisCache.generateCacheExpire(), TimeUnit.MILLISECONDS);
 
       log.info("【getNoteListFromDB】笔记缓存为空，从数据库获取笔记信息 {}", JsonUtil.toJson(noteShowList));
 
@@ -206,7 +216,7 @@ public class NoteShowServiceImpl implements NoteShowService {
     } catch (InterruptedException e) {
       // 加锁失败
       // 这里再去尝试获取下缓存-双重检查
-      List<NoteShowVO> noteListFromCache = getNoteShowListFromCache(notePageInfoKey);
+      List<NoteShowVO> noteListFromCache = getNoteShowListFromCache(notePageKey);
       if (!CollectionUtils.isEmpty(noteListFromCache)) {
         return noteListFromCache;
       }
@@ -225,6 +235,15 @@ public class NoteShowServiceImpl implements NoteShowService {
         NoteCacheKeyConstant.NOTE_TOTAL_KEY_PREFIX + notePageParam.getUserId();
     // 笔记总条数
     Long total = redisCache.getLong(userNoteTotalKey);
+    if (total == null) {
+      total =
+          noteMapper.selectCount(
+              new LambdaQueryWrapper<Note>()
+                  .eq(Note::getUserId, notePageParam.getUserId())
+                  .eq(Note::getStatus, NoteStatusEnum.PUBLISHED.getCode()));
+      redisCache.set(
+          userNoteTotalKey, total, RedisCache.generateCacheExpire(), TimeUnit.MILLISECONDS);
+    }
     // 计算总页数
     double totalPages = Math.ceil((double) total / notePageParam.getPageSize());
     return new PageVO<>(total, (long) totalPages, Collections.unmodifiableList(noteList));

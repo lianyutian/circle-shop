@@ -14,6 +14,6 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class NotePageParam extends PageParam {
-  /** 用户id */
+  /** 博主 ID */
   private Long userId;
 }

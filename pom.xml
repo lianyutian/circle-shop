@@ -13,6 +13,7 @@
         <module>cshop-user</module>
         <module>cshop-home</module>
         <module>cshop-note</module>
+        <module>cshop-social</module>
     </modules>
 
     <properties>
@@ -52,6 +53,8 @@
         <redisson.version>3.41.0</redisson.version>
         <!-- gson 版本 -->
         <gson.version>2.10.1</gson.version>
+        <!-- rocketmq 版本 -->
+        <rocketmq-starter.version>2.2.1</rocketmq-starter.version>
     </properties>
 
     <dependencyManagement>
@@ -139,6 +142,11 @@
                 <groupId>com.google.code.gson</groupId>
                 <artifactId>gson</artifactId>
                 <version>${gson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.rocketmq</groupId>
+                <artifactId>rocketmq-spring-boot-starter</artifactId>
+                <version>${rocketmq-starter.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

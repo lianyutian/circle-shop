@@ -23,7 +23,7 @@ public class Note implements Serializable {
   @TableId(type = IdType.AUTO)
   private Long id;
 
-  /** 用户id */
+  /** 博主 ID */
   private Long userId;
 
   /** 笔记图片链接 */
