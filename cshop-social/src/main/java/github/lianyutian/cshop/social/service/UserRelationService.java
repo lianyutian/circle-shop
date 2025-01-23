@@ -1,6 +1,9 @@
 package github.lianyutian.cshop.social.service;
 
 import github.lianyutian.cshop.common.model.ApiResult;
+import github.lianyutian.cshop.social.model.vo.UserAttentionListVO;
+import github.lianyutian.cshop.social.model.vo.UserFollowerListVO;
+import java.util.List;
 
 /**
  * UserRelationService
@@ -25,4 +28,20 @@ public interface UserRelationService {
    * @return ApiResult
    */
   ApiResult<Void> unAttention(Long attentionUserId);
+
+  /**
+   * 获取关注列表
+   *
+   * @param userId 用户id
+   * @return 关注列表
+   */
+  List<UserAttentionListVO> getAttentionList(Long userId);
+
+  /**
+   * 获取粉丝列表
+   *
+   * @param userId 用户id
+   * @return 粉丝列表
+   */
+  List<UserFollowerListVO> getFollowerList(Long userId);
 }

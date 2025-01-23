@@ -13,4 +13,7 @@ public class SocialCacheKeyConstant {
 
   /** 用户粉丝前缀 */
   public static final String USER_FOLLOWER_PREFIX = "social:follower:";
+
+  /** 用户展示信息缓存前缀 */
+  public static final String USER_SHOW_KEY_PREFIX = "cshop-user:show:";
 }

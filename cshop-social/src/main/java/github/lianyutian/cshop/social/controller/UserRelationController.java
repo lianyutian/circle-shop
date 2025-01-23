@@ -1,12 +1,17 @@
 package github.lianyutian.cshop.social.controller;
 
 import github.lianyutian.cshop.common.model.ApiResult;
+import github.lianyutian.cshop.social.model.vo.UserAttentionListVO;
+import github.lianyutian.cshop.social.model.vo.UserFollowerListVO;
 import github.lianyutian.cshop.social.service.UserRelationService;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -46,5 +51,28 @@ public class UserRelationController {
   public ApiResult<Void> unAttention(@PathVariable("attentionUserId") Long attentionUserId) {
     log.info("博主取关，attentionUserId:{}", attentionUserId);
     return userRelationService.unAttention(attentionUserId);
+  }
+
+  /**
+   * 获取用户关注列表
+   *
+   * @return ApiResult
+   */
+  @PostMapping("attention/list")
+  public ApiResult<List<UserAttentionListVO>> getAttentionList(
+      @RequestParam("userId") Long userId) {
+    List<UserAttentionListVO> attentionList = userRelationService.getAttentionList(userId);
+    return ApiResult.success(attentionList);
+  }
+
+  /**
+   * 获取用户粉丝列表
+   *
+   * @return 用户粉丝列表
+   */
+  @PostMapping("follower/list")
+  public ApiResult<List<UserFollowerListVO>> getFollowerList(@RequestParam("userId") Long userId) {
+    List<UserFollowerListVO> attentionList = userRelationService.getFollowerList(userId);
+    return ApiResult.success(attentionList);
   }
 }

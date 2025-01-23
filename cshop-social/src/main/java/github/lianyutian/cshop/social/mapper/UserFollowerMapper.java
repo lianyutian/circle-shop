@@ -37,4 +37,12 @@ public interface UserFollowerMapper extends BaseMapper<UserFollower> {
    * @param batchList 粉丝列表
    */
   void batchUpdate(@Param("batchList") List<UserFollower> batchList);
+
+  /**
+   * 根据用户id查询用户粉丝id集合
+   *
+   * @param userId 用户id
+   * @return 粉丝id集合
+   */
+  List<Long> selectFollowerIdListByUserId(long userId);
 }

@@ -59,4 +59,10 @@
             (#{item.userId}, #{item.attentionId})
         </foreach>
     </select>
+
+    <select id="selectAttentionIdListByUserId" resultType="java.lang.Long">
+        SELECT attention_id
+        FROM user_attention
+        WHERE user_id = #{userId}
+    </select>
 </mapper>

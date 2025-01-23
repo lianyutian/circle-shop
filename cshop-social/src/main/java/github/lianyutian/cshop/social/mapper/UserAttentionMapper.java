@@ -38,4 +38,12 @@ public interface UserAttentionMapper extends BaseMapper<UserAttention> {
    * @param batchList 关注列表
    */
   void batchUpdate(@Param("batchList") List<UserAttention> batchList);
+
+  /**
+   * 根据userID查询关注用户列表
+   *
+   * @param userId 用户ID
+   * @return 关注用户列表ID
+   */
+  List<Long> selectAttentionIdListByUserId(@Param("userId") long userId);
 }

@@ -47,4 +47,10 @@
             (#{item.userId}, #{item.followerId})
         </foreach>
     </select>
+
+    <select id="selectFollowerIdListByUserId" resultType="java.lang.Long">
+        SELECT follower_id
+        FROM user_follower
+        WHERE user_id = #{userId}
+    </select>
 </mapper>

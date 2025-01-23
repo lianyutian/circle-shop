@@ -2,14 +2,18 @@ package github.lianyutian.cshop.common.redis;
 
 import github.lianyutian.cshop.common.utils.CommonUtil;
 import github.lianyutian.cshop.common.utils.JsonUtil;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.data.redis.core.ListOperations;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.data.redis.serializer.RedisSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.stereotype.Component;
 
 /**
@@ -286,6 +290,48 @@ public class RedisCache {
     } catch (Exception e) {
       log.error("Failed to execute script for keys: {}", keys, e);
       throw new RedisCacheException("Failed to execute script for keys: " + keys, e);
+    }
+  }
+
+  /**
+   * 批量获取 Redis 键对应的值
+   *
+   * @param keys 要查询的键列表
+   * @return 查询结果列表，按键顺序返回值；不存在的键返回 null
+   */
+  public List<Object> batchGet(List<String> keys) {
+    try {
+      // 使用 Pipeline 批量执行 GET 操作
+      List<Object> results = new ArrayList<>(keys.size());
+      RedisSerializer<String> stringSerializer = new StringRedisSerializer();
+
+      redisTemplate
+          .executePipelined(
+              (RedisCallback<Object>)
+                  connection -> {
+                    for (String key : keys) {
+                      byte[] rawKey = key.getBytes();
+                      connection.stringCommands().get(rawKey);
+                    }
+                    return null; // 必须返回 null
+                  })
+          .forEach(
+              result -> {
+                if (result == null || result instanceof Throwable) {
+                  results.add(null);
+                } else {
+                  results.add(result);
+                }
+              });
+      return results;
+    } catch (Exception e) {
+      log.error(
+          "Failed to batch get values for keys: {}. Error type: {}, Message: {}",
+          keys,
+          e.getClass().getName(),
+          e.getMessage(),
+          e);
+      throw new RedisCacheException("Failed to batch get values for keys: " + keys, e);
     }
   }
 }
