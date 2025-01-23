@@ -13,7 +13,7 @@ import lombok.Data;
  */
 @Data
 @Builder
-public class UserAttentionMessage implements Serializable {
+public class UserAttentionUpdateMessage implements Serializable {
   private Long userId;
   private Long attentionId;
   private Integer del;

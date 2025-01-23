@@ -8,6 +8,9 @@ package github.lianyutian.cshop.social.constant;
  * @version 1.0
  */
 public class SocialCacheKeyConstant {
-  /** 用户关系前缀 */
+  /** 用户关注前缀 */
   public static final String USER_ATTENTION_PREFIX = "social:attention:";
+
+  /** 用户粉丝前缀 */
+  public static final String USER_FOLLOWER_PREFIX = "social:follower:";
 }

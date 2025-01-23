@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @version 1.0
  */
 @RestController
-@RequestMapping("/api/captcha/v1")
+@RequestMapping("/api/user/captcha/v1")
 @AllArgsConstructor
 @Slf4j
 public class CaptchaController {

@@ -18,7 +18,7 @@ create table user_follower
     create_time datetime   default CURRENT_TIMESTAMP null comment '创建时间',
     update_time datetime   default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP comment '更新时间'
 ) comment '粉丝关系表';
-create index uid on user_follower (user_id, create_time);
+create index uid on user_follower (user_id, follower_id);
 
 create table user_attention
 (
@@ -29,7 +29,7 @@ create table user_attention
     create_time  datetime   default CURRENT_TIMESTAMP null comment '创建时间',
     update_time  datetime   default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP comment '更新时间'
 ) comment '用户关注表';
-create index uid on user_attention (user_id, create_time);
+create index uid on user_attention (user_id, attention_id);
 
 
 

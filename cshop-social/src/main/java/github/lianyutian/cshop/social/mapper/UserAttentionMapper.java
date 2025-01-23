@@ -2,7 +2,10 @@ package github.lianyutian.cshop.social.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import github.lianyutian.cshop.social.model.po.UserAttention;
+import java.util.List;
+import java.util.Set;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 /**
  * UserAttentionMapper
@@ -12,4 +15,27 @@ import org.apache.ibatis.annotations.Mapper;
  * @version 1.0
  */
 @Mapper
-public interface UserAttentionMapper extends BaseMapper<UserAttention> {}
+public interface UserAttentionMapper extends BaseMapper<UserAttention> {
+  /**
+   * 根据userID和attentionID查询关注用户列表
+   *
+   * @param userAttentionList 关注列表
+   * @return 关注用户列表
+   */
+  List<Long> selectAttentionIdList(
+      @Param("userAttentionList") Set<UserAttention> userAttentionList);
+
+  /**
+   * 批量插入关注用户列表
+   *
+   * @param batchList 关注列表
+   */
+  void batchInsert(@Param("batchList") List<UserAttention> batchList);
+
+  /**
+   * 批量更新关注用户列表
+   *
+   * @param batchList 关注列表
+   */
+  void batchUpdate(@Param("batchList") List<UserAttention> batchList);
+}

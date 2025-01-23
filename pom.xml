@@ -11,7 +11,6 @@
     <modules>
         <module>cshop-common</module>
         <module>cshop-user</module>
-        <module>cshop-home</module>
         <module>cshop-note</module>
         <module>cshop-social</module>
     </modules>
@@ -55,6 +54,8 @@
         <gson.version>2.10.1</gson.version>
         <!-- rocketmq 版本 -->
         <rocketmq-starter.version>2.2.1</rocketmq-starter.version>
+        <!-- hutool工具 版本 -->
+        <hutool.version>5.8.25</hutool.version>
     </properties>
 
     <dependencyManagement>
@@ -147,6 +148,11 @@
                 <groupId>org.apache.rocketmq</groupId>
                 <artifactId>rocketmq-spring-boot-starter</artifactId>
                 <version>${rocketmq-starter.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.hutool</groupId>
+                <artifactId>hutool-all</artifactId>
+                <version>${hutool.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

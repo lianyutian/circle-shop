@@ -17,4 +17,12 @@ public interface UserRelationService {
    * @return ApiResult
    */
   ApiResult<Void> doAttention(Long attentionUserId);
+
+  /**
+   * 取关
+   *
+   * @param attentionUserId 关注用户id
+   * @return ApiResult
+   */
+  ApiResult<Void> unAttention(Long attentionUserId);
 }

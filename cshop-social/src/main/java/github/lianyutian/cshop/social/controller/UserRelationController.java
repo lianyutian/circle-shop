@@ -25,14 +25,26 @@ public class UserRelationController {
   private final UserRelationService userRelationService;
 
   /**
-   * 博主关注/取关
+   * 用户关注
    *
-   * @param attentionUserId 关注用户id
-   * @return
+   * @param attentionUserId 关注博主id
+   * @return ApiResult
    */
   @GetMapping("attention/{attentionUserId}")
   public ApiResult<Void> doAttention(@PathVariable("attentionUserId") Long attentionUserId) {
     log.info("博主关注，attentionUserId:{}", attentionUserId);
     return userRelationService.doAttention(attentionUserId);
+  }
+
+  /**
+   * 用户取关
+   *
+   * @param attentionUserId 取关博主id
+   * @return ApiResult
+   */
+  @GetMapping("unAttention/{attentionUserId}")
+  public ApiResult<Void> unAttention(@PathVariable("attentionUserId") Long attentionUserId) {
+    log.info("博主取关，attentionUserId:{}", attentionUserId);
+    return userRelationService.unAttention(attentionUserId);
   }
 }

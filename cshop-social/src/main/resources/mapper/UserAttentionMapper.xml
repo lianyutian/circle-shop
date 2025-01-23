@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="github.lianyutian.cshop.social.mapper.UserAttentionMapper">
+
+    <resultMap id="BaseResultMap" type="github.lianyutian.cshop.social.model.po.UserAttention">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="userId" column="user_id" jdbcType="BIGINT"/>
+        <result property="attentionId" column="attention_id" jdbcType="BIGINT"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="del" column="del" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,user_id,attention_id,
+        create_time,del
+    </sql>
+
+    <insert id="batchInsert">
+        insert into user_attention (id,user_id,attention_id,del)
+        values
+        <foreach collection="batchList" item="item" separator=",">
+            (#{item.id},#{item.userId},#{item.attentionId},#{item.del})
+        </foreach>
+    </insert>
+
+    <!--
+    UPDATE user_attention
+    SET del = CASE
+        WHEN user_id=1 AND attention_id=100 THEN 1
+        WHEN user_id=2 AND attention_id=200 THEN 0
+        WHEN user_id=3 AND attention_id=300 THEN 1
+    END
+    WHERE (user_id, attention_id) IN (
+        (1, 100),
+        (2, 200),
+        (3, 300)
+    );-->
+    <update id="batchUpdate">
+        UPDATE user_attention
+        SET del = CASE
+        <foreach collection="batchList" item="item" separator=" ">
+            WHEN user_id=#{item.userId} AND attention_id=#{item.attentionId} THEN #{item.del}
+        </foreach>
+        END
+        WHERE (user_id, attention_id) IN (
+        <foreach collection="batchList" item="item" separator="," open="(" close=")">
+            (#{item.userId}, #{item.attentionId})
+        </foreach>
+        )
+    </update>
+
+    <select id="selectAttentionIdList" resultType="java.lang.Long">
+        SELECT attention_id
+        FROM user_attention
+        WHERE (user_id, attention_id) IN
+        <foreach collection="userAttentionList" item="item" open="(" separator="," close=")">
+            (#{item.userId}, #{item.attentionId})
+        </foreach>
+    </select>
+</mapper>

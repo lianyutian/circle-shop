@@ -18,13 +18,13 @@ import lombok.Data;
 public class UserAttention {
   /** 主键id */
   @TableId(type = IdType.AUTO)
-  private Integer id;
+  private Long id;
 
   /** 当前博主用户id */
-  private Integer userId;
+  private Long userId;
 
   /** 关注博主用户id */
-  private Integer attentionId;
+  private Long attentionId;
 
   /** 创建设计，会按这个字段排序 */
   private Date createTime;

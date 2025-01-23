@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
 
 /**
@@ -245,6 +246,46 @@ public class RedisCache {
     } catch (Exception e) {
       log.error("Failed to add value to list for key: {}", key, e);
       throw new RedisCacheException("Failed to add value to list for key: " + key, e);
+    }
+  }
+
+  /**
+   * 从列表中移除特定值
+   *
+   * <p>此方法旨在从Redis中指定键对应的列表中移除所有匹配给定值的元素
+   *
+   * <p>它使用RedisTemplate的ListOperations来执行移除操作，并处理可能发生的异常
+   *
+   * @param key Redis中列表的键
+   * @param value 要从列表中移除的值
+   */
+  public void removeValueFromList(String key, String value) {
+    try {
+      // 获取RedisTemplate的ListOperations操作对象
+      ListOperations<String, String> listOperations = redisTemplate.opsForList();
+      // 使用remove方法从列表中移除匹配的值，0表示移除所有匹配项
+      listOperations.remove(key, 0, value);
+    } catch (Exception e) {
+      // 记录错误日志，包括键、值和异常信息
+      log.error("Failed to remove value {} from list for key: {}", value, key, e);
+      // 抛出自定义异常，包装原始异常
+      throw new RedisCacheException("Failed to remove value from list for key: " + key, e);
+    }
+  }
+
+  /**
+   * 执行 lua 脚本
+   *
+   * @param script lua 脚本
+   * @param keys keys
+   * @param args args
+   */
+  public void execute(DefaultRedisScript<Long> script, List<String> keys, Object... args) {
+    try {
+      redisTemplate.execute(script, keys, args);
+    } catch (Exception e) {
+      log.error("Failed to execute script for keys: {}", keys, e);
+      throw new RedisCacheException("Failed to execute script for keys: " + keys, e);
     }
   }
 }
