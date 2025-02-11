@@ -4,7 +4,7 @@ import github.lianyutian.cshop.common.model.ApiResult;
 import github.lianyutian.cshop.social.model.vo.UserAttentionListVO;
 import github.lianyutian.cshop.social.model.vo.UserFollowerListVO;
 import github.lianyutian.cshop.social.service.UserRelationService;
-import java.util.List;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -59,9 +59,9 @@ public class UserRelationController {
    * @return ApiResult
    */
   @PostMapping("attention/list")
-  public ApiResult<List<UserAttentionListVO>> getAttentionList(
-      @RequestParam("userId") Long userId) {
-    List<UserAttentionListVO> attentionList = userRelationService.getAttentionList(userId);
+  public ApiResult<Set<UserAttentionListVO>> getAttentionList(
+      @RequestParam("userId") Long userId, @RequestParam("start") Integer start) {
+    Set<UserAttentionListVO> attentionList = userRelationService.getAttentionList(userId, start);
     return ApiResult.success(attentionList);
   }
 
@@ -71,8 +71,9 @@ public class UserRelationController {
    * @return 用户粉丝列表
    */
   @PostMapping("follower/list")
-  public ApiResult<List<UserFollowerListVO>> getFollowerList(@RequestParam("userId") Long userId) {
-    List<UserFollowerListVO> attentionList = userRelationService.getFollowerList(userId);
+  public ApiResult<Set<UserFollowerListVO>> getFollowerList(
+      @RequestParam("userId") Long userId, @RequestParam("start") Integer start) {
+    Set<UserFollowerListVO> attentionList = userRelationService.getFollowerList(userId, start);
     return ApiResult.success(attentionList);
   }
 }

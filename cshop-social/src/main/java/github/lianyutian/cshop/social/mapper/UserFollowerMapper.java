@@ -44,5 +44,6 @@ public interface UserFollowerMapper extends BaseMapper<UserFollower> {
    * @param userId 用户id
    * @return 粉丝id集合
    */
-  List<Long> selectFollowerIdListByUserId(long userId);
+  List<Long> selectFollowerIdListByUserId(
+      @Param("userId") long userId, @Param("offset") int offset, @Param("limit") int limit);
 }

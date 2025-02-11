@@ -58,13 +58,20 @@ public class UserFollowerUpdateListener implements MessageListenerConcurrently {
               insertUserFollowerList.add(userFollower);
             }
           });
-      batchInsertUserFollower(insertUserFollowerList);
-      batchUpdateUserFollower(updateUserFollowerList);
+      if (!CollectionUtils.isEmpty(insertUserFollowerList)) {
+        batchInsertUserFollower(insertUserFollowerList);
+        log.info("用户粉丝插入成功");
+      }
+      if (!CollectionUtils.isEmpty(updateUserFollowerList)) {
+        batchUpdateUserFollower(updateUserFollowerList);
+        log.info("用户粉丝更新成功");
+      }
+
     } catch (Exception e) {
       log.error("用户粉丝更新失败", e);
       return ConsumeConcurrentlyStatus.RECONSUME_LATER;
     }
-    log.info("用户粉丝更新成功");
+    log.info("用户粉丝更新消息消费完成");
     return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
   }
 

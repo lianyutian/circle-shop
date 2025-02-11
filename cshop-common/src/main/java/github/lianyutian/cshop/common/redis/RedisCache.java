@@ -4,6 +4,7 @@ import github.lianyutian.cshop.common.utils.CommonUtil;
 import github.lianyutian.cshop.common.utils.JsonUtil;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -11,9 +12,8 @@ import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.data.redis.serializer.RedisSerializer;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.stereotype.Component;
 
 /**
@@ -303,7 +303,6 @@ public class RedisCache {
     try {
       // 使用 Pipeline 批量执行 GET 操作
       List<Object> results = new ArrayList<>(keys.size());
-      RedisSerializer<String> stringSerializer = new StringRedisSerializer();
 
       redisTemplate
           .executePipelined(
@@ -332,6 +331,106 @@ public class RedisCache {
           e.getMessage(),
           e);
       throw new RedisCacheException("Failed to batch get values for keys: " + keys, e);
+    }
+  }
+
+  /**
+   * 判断成员是否在集合中
+   *
+   * @param key key
+   * @param value value
+   * @return Boolean
+   */
+  public Boolean isMemberOfZSet(String key, String value) {
+    try {
+      ZSetOperations<String, String> zSetOperations = redisTemplate.opsForZSet();
+      return zSetOperations.rank(key, value) != null;
+    } catch (Exception e) {
+      log.error("Failed to check if member is in set for key: {}", key, e);
+      throw new RedisCacheException("Failed to check if member is in set for key: " + key, e);
+    }
+  }
+
+  /**
+   * 添加到集合
+   *
+   * @param key key
+   * @param value value
+   */
+  public void addToZSet(String key, String value) {
+    try {
+      ZSetOperations<String, String> zSetOperations = redisTemplate.opsForZSet();
+      double score = System.currentTimeMillis();
+      zSetOperations.add(key, value, score);
+    } catch (Exception e) {
+      log.error("Failed to add value to set for key: {}", key, e);
+      throw new RedisCacheException("Failed to add value to set for key: " + key, e);
+    }
+  }
+
+  /**
+   * 从集合中移除
+   *
+   * @param key key
+   * @param value value
+   */
+  public void removeValueFromZSet(String key, String value) {
+    try {
+      ZSetOperations<String, String> zSetOperations = redisTemplate.opsForZSet();
+      zSetOperations.remove(key, value);
+    } catch (Exception e) {
+      log.error("Failed to remove value from set for key: {}", key, e);
+      throw new RedisCacheException("Failed to remove value from set for key: " + key, e);
+    }
+  }
+
+  /**
+   * 获取 Set 集合
+   *
+   * @param key key
+   * @return 集合
+   */
+  public Set<String> listZSet(String key) {
+    try {
+      ZSetOperations<String, String> zSetOperations = redisTemplate.opsForZSet();
+      return zSetOperations.range(key, 0, -1);
+    } catch (Exception e) {
+      log.error("Failed to get set for key: {}", key, e);
+      throw new RedisCacheException("Failed to get set for key: " + key, e);
+    }
+  }
+
+  /**
+   * 获取 Set 集合
+   *
+   * @param key key
+   * @param start start
+   * @param end end
+   * @return 集合
+   */
+  public Set<String> rangeZSet(String key, long start, long end) {
+    try {
+      ZSetOperations<String, String> zSetOperations = redisTemplate.opsForZSet();
+      return zSetOperations.range(key, start, end);
+    } catch (Exception e) {
+      log.error("Failed to get set for key: {}", key, e);
+      throw new RedisCacheException("Failed to get set for key: " + key, e);
+    }
+  }
+
+  /**
+   * 获取集合大小
+   *
+   * @param key key
+   * @return 集合大小
+   */
+  public Long getZSetSize(String key) {
+    try {
+      ZSetOperations<String, String> zSetOperations = redisTemplate.opsForZSet();
+      return zSetOperations.zCard(key);
+    } catch (Exception e) {
+      log.error("Failed to get set for key: {}", key, e);
+      throw new RedisCacheException("Failed to get set for key: " + key, e);
     }
   }
 }

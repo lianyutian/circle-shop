@@ -18,6 +18,8 @@ import github.lianyutian.cshop.social.mq.message.UserFollowerUpdateMessage;
 import github.lianyutian.cshop.social.mq.producer.SocialDefaultProducer;
 import github.lianyutian.cshop.social.service.UserRelationService;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -42,6 +44,8 @@ public class UserRelationServiceImpl implements UserRelationService {
   private final UserAttentionMapper userAttentionMapper;
   private final UserFollowerMapper userFollowerMapper;
 
+  private static final int PAGE_SIZE = 10;
+
   @Override
   @Transactional(rollbackFor = Exception.class)
   public ApiResult<Void> doAttention(Long attentionUserId) {
@@ -56,10 +60,9 @@ public class UserRelationServiceImpl implements UserRelationService {
     // 判断下要关注的博主是否有关注过
     String attentionKey = SocialCacheKeyConstant.USER_ATTENTION_PREFIX + loginUserInfo.getId();
     // 已关注的用户列表
-    List<String> attentionUserIdList = redisCache.listAll(attentionKey);
+    Boolean isExist = redisCache.isMemberOfZSet(attentionKey, String.valueOf(attentionUserId));
 
-    if (!CollectionUtils.isEmpty(attentionUserIdList)
-        && attentionUserIdList.contains(String.valueOf(attentionUserId))) {
+    if (isExist) {
       log.info(
           "用户id: {} 关注博主id: {}, 博主id: {} 已经存在用户关注列表中",
           loginUserInfo.getId(),
@@ -74,7 +77,7 @@ public class UserRelationServiceImpl implements UserRelationService {
         loginUserInfo.getId(),
         attentionUserId,
         attentionUserId);
-    redisCache.pushToList(attentionKey, String.valueOf(attentionUserId));
+    redisCache.addToZSet(attentionKey, String.valueOf(attentionUserId));
     publishAttentionEvent(loginUserInfo.getId(), attentionUserId);
 
     // 添加用户为被关注用户的粉丝
@@ -84,7 +87,7 @@ public class UserRelationServiceImpl implements UserRelationService {
         attentionUserId,
         loginUserInfo.getId(),
         loginUserInfo.getId());
-    redisCache.pushToList(followerKey, String.valueOf(loginUserInfo.getId()));
+    redisCache.addToZSet(followerKey, String.valueOf(loginUserInfo.getId()));
     publishFollowerEvent(loginUserInfo.getId(), attentionUserId);
     return ApiResult.result(BizCodeEnum.USER_ATTENTION_SUCCESS);
   }
@@ -98,9 +101,8 @@ public class UserRelationServiceImpl implements UserRelationService {
     }
     // 判断是否关注，关注了就取消关注
     String key = SocialCacheKeyConstant.USER_ATTENTION_PREFIX + loginUserInfo.getId();
-    List<String> attentionUserIdList = redisCache.listAll(key);
-    if (CollectionUtils.isEmpty(attentionUserIdList)
-        || !attentionUserIdList.contains(String.valueOf(attentionUserId))) {
+    Boolean isExist = redisCache.isMemberOfZSet(key, String.valueOf(attentionUserId));
+    if (!isExist) {
       log.info(
           "用户id: {} 取关博主id: {}, 博主id: {} 不存在用户关注列表中",
           loginUserInfo.getId(),
@@ -115,7 +117,7 @@ public class UserRelationServiceImpl implements UserRelationService {
         loginUserInfo.getId(),
         attentionUserId,
         attentionUserId);
-    redisCache.removeValueFromList(key, String.valueOf(attentionUserId));
+    redisCache.removeValueFromZSet(key, String.valueOf(attentionUserId));
     publishUnAttentionEvent(loginUserInfo.getId(), attentionUserId);
 
     // 发布粉丝取关事件
@@ -125,47 +127,50 @@ public class UserRelationServiceImpl implements UserRelationService {
         attentionUserId,
         loginUserInfo.getId(),
         loginUserInfo.getId());
-    redisCache.removeValueFromList(followerKey, String.valueOf(loginUserInfo.getId()));
+    redisCache.removeValueFromZSet(followerKey, String.valueOf(loginUserInfo.getId()));
     publishUnFollowerEvent(loginUserInfo.getId(), attentionUserId);
     return ApiResult.result(BizCodeEnum.USER_UN_ATTENTION_SUCCESS);
   }
 
   @Override
-  public List<UserAttentionListVO> getAttentionList(Long userId) {
+  public Set<UserAttentionListVO> getAttentionList(Long userId, Integer start) {
     // 从缓存获取关注列表
-    List<UserAttentionListVO> attentionListFromCache = getAttentionListFromCache(userId);
+    Set<UserAttentionListVO> attentionListFromCache =
+        getAttentionListFromCache(userId, start, start + PAGE_SIZE);
     if (!CollectionUtils.isEmpty(attentionListFromCache)) {
       return attentionListFromCache;
     }
     // 从数据库获取关注列表
-    return getAttentionListFromDB(userId);
+    return getAttentionListFromDB(userId, start, PAGE_SIZE);
   }
 
   @Override
-  public List<UserFollowerListVO> getFollowerList(Long userId) {
-    // 从缓存获取关注列表
-    List<UserFollowerListVO> followerListFromCache = getFollowerListFromCache(userId);
+  public Set<UserFollowerListVO> getFollowerList(Long userId, Integer start) {
+    // 从缓存获取粉丝列表
+    Set<UserFollowerListVO> followerListFromCache =
+        getFollowerListFromCache(userId, start, start + PAGE_SIZE);
     if (!CollectionUtils.isEmpty(followerListFromCache)) {
       return followerListFromCache;
     }
-    // 从数据库获取关注列表
-    return getFollowerListFromDB(userId);
+    // 从数据库获取粉丝列表
+    return getFollowerListFromDB(userId, start, PAGE_SIZE);
   }
 
-  private List<UserFollowerListVO> getFollowerListFromDB(long id) {
+  private Set<UserFollowerListVO> getFollowerListFromDB(long id, int offset, int limit) {
     log.info("从数据库获取用户id: {} 粉丝列表", id);
-    List<Long> attentionIdList = userFollowerMapper.selectFollowerIdListByUserId(id);
+    List<Long> attentionIdList = userFollowerMapper.selectFollowerIdListByUserId(id, offset, limit);
 
     if (CollectionUtils.isEmpty(attentionIdList)) {
       return null;
     }
-    return getUserFollowerListVOS(attentionIdList.stream().map(String::valueOf).toList());
+    return getUserFollowerListVOS(
+        attentionIdList.stream().map(String::valueOf).collect(Collectors.toSet()));
   }
 
-  private List<UserFollowerListVO> getFollowerListFromCache(long id) {
+  private Set<UserFollowerListVO> getFollowerListFromCache(long id, int start, int end) {
     log.info("从缓存获取用户id: {} 粉丝列表", id);
     String key = SocialCacheKeyConstant.USER_FOLLOWER_PREFIX + id;
-    List<String> followerUserIdList = redisCache.listAll(key);
+    Set<String> followerUserIdList = redisCache.rangeZSet(key, start, end);
     if (CollectionUtils.isEmpty(followerUserIdList)) {
       return null;
     }
@@ -173,7 +178,7 @@ public class UserRelationServiceImpl implements UserRelationService {
     return getUserFollowerListVOS(followerUserIdList);
   }
 
-  private List<UserFollowerListVO> getUserFollowerListVOS(List<String> followerUserIdList) {
+  private Set<UserFollowerListVO> getUserFollowerListVOS(Set<String> followerUserIdList) {
     List<String> keys =
         followerUserIdList.stream()
             .map(attentionUserId -> SocialCacheKeyConstant.USER_SHOW_KEY_PREFIX + attentionUserId)
@@ -194,23 +199,25 @@ public class UserRelationServiceImpl implements UserRelationService {
               }
               return null;
             })
-        .toList();
+        .collect(Collectors.toSet());
   }
 
-  private List<UserAttentionListVO> getAttentionListFromDB(long id) {
+  private Set<UserAttentionListVO> getAttentionListFromDB(long id, int offset, int limit) {
     log.info("从数据库获取用户id: {} 关注列表", id);
-    List<Long> attentionIdList = userAttentionMapper.selectAttentionIdListByUserId(id);
+    List<Long> attentionIdList =
+        userAttentionMapper.selectAttentionIdListByUserId(id, offset, limit);
 
     if (CollectionUtils.isEmpty(attentionIdList)) {
       return null;
     }
-    return getUserAttentionListVOS(attentionIdList.stream().map(String::valueOf).toList());
+    return getUserAttentionListVOS(
+        attentionIdList.stream().map(String::valueOf).collect(Collectors.toSet()));
   }
 
-  private List<UserAttentionListVO> getAttentionListFromCache(long id) {
+  private Set<UserAttentionListVO> getAttentionListFromCache(long id, Integer start, Integer end) {
     log.info("从缓存获取用户id: {} 关注列表", id);
     String key = SocialCacheKeyConstant.USER_ATTENTION_PREFIX + id;
-    List<String> attentionUserIdList = redisCache.listAll(key);
+    Set<String> attentionUserIdList = redisCache.rangeZSet(key, start, end);
     if (CollectionUtils.isEmpty(attentionUserIdList)) {
       return null;
     }
@@ -218,7 +225,7 @@ public class UserRelationServiceImpl implements UserRelationService {
     return getUserAttentionListVOS(attentionUserIdList);
   }
 
-  private List<UserAttentionListVO> getUserAttentionListVOS(List<String> attentionUserIdList) {
+  private Set<UserAttentionListVO> getUserAttentionListVOS(Set<String> attentionUserIdList) {
     List<String> keys =
         attentionUserIdList.stream()
             .map(attentionUserId -> SocialCacheKeyConstant.USER_SHOW_KEY_PREFIX + attentionUserId)
@@ -226,7 +233,7 @@ public class UserRelationServiceImpl implements UserRelationService {
 
     List<Object> objects = redisCache.batchGet(keys);
 
-    if (CollectionUtils.isEmpty(objects)) {
+    if (objects.contains(null)) {
       // TODO 从用户服务获取
       return null;
     }
@@ -239,7 +246,7 @@ public class UserRelationServiceImpl implements UserRelationService {
               }
               return null;
             })
-        .toList();
+        .collect(Collectors.toSet());
   }
 
   private void publishFollowerEvent(Long followerId, Long attentionUserId) {

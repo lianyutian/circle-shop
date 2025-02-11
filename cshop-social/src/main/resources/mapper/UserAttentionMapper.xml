@@ -64,5 +64,6 @@
         SELECT attention_id
         FROM user_attention
         WHERE user_id = #{userId}
+        limit ${limit} offset #{offset}
     </select>
 </mapper>

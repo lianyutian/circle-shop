@@ -45,5 +45,6 @@ public interface UserAttentionMapper extends BaseMapper<UserAttention> {
    * @param userId 用户ID
    * @return 关注用户列表ID
    */
-  List<Long> selectAttentionIdListByUserId(@Param("userId") long userId);
+  List<Long> selectAttentionIdListByUserId(
+      @Param("userId") long userId, @Param("offset") int offset, @Param("limit") int limit);
 }

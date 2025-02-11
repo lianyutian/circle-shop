@@ -58,13 +58,19 @@ public class UserAttentionUpdateListener implements MessageListenerConcurrently 
               insertUserAttentionList.add(userAttention);
             }
           });
-      batchInsertUserAttention(insertUserAttentionList);
-      batchUpdateUserAttention(updateUserAttentionList);
+      if (!CollectionUtils.isEmpty(insertUserAttentionList)) {
+        batchInsertUserAttention(insertUserAttentionList);
+        log.info("用户关注插入成功");
+      }
+      if (!CollectionUtils.isEmpty(updateUserAttentionList)) {
+        batchUpdateUserAttention(updateUserAttentionList);
+        log.info("用户关注更新成功");
+      }
     } catch (Exception e) {
       log.error("用户关注更新失败", e);
       return ConsumeConcurrentlyStatus.RECONSUME_LATER;
     }
-    log.info("用户关注更新成功");
+    log.info("用户关注消息消费完成");
     return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
   }
 
