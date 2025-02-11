@@ -1,18 +1,17 @@
 package github.lianyutian.cshop.social.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import github.lianyutian.cshop.common.enums.BizCodeEnum;
 import github.lianyutian.cshop.common.interceptor.LoginInterceptor;
 import github.lianyutian.cshop.common.model.ApiResult;
 import github.lianyutian.cshop.common.model.LoginUserInfo;
 import github.lianyutian.cshop.common.redis.RedisCache;
+import github.lianyutian.cshop.common.redis.RedisLock;
 import github.lianyutian.cshop.common.utils.JsonUtil;
 import github.lianyutian.cshop.social.constant.SocialCacheKeyConstant;
 import github.lianyutian.cshop.social.constant.SocialMQConstant;
 import github.lianyutian.cshop.social.enums.SocialMessageType;
 import github.lianyutian.cshop.social.mapper.UserAttentionMapper;
 import github.lianyutian.cshop.social.mapper.UserFollowerMapper;
-import github.lianyutian.cshop.social.model.po.UserFollower;
 import github.lianyutian.cshop.social.model.vo.UserAttentionListVO;
 import github.lianyutian.cshop.social.model.vo.UserFollowerListVO;
 import github.lianyutian.cshop.social.mq.message.UserAttentionUpdateMessage;
@@ -24,6 +23,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -39,14 +39,15 @@ import org.springframework.util.CollectionUtils;
 @Slf4j
 @AllArgsConstructor
 public class UserRelationServiceImpl implements UserRelationService {
+  private static final int PAGE_SIZE = 10;
 
   private final RedisCache redisCache;
+  private final RedisLock redisLock;
 
   private final SocialDefaultProducer socialDefaultProducer;
   private final UserAttentionMapper userAttentionMapper;
   private final UserFollowerMapper userFollowerMapper;
-
-  private static final int PAGE_SIZE = 10;
+  private final StringRedisTemplate stringRedisTemplate;
 
   @Override
   @Transactional(rollbackFor = Exception.class)
@@ -160,19 +161,16 @@ public class UserRelationServiceImpl implements UserRelationService {
 
   @Override
   public Boolean isFollower(Long attentionUserId) {
+    /*
+    直接使用 redis 判断是否关注。
+    允许 redis 中数据和 DB 数据有差异
+    1. 一般情况下，用户关注后会往 redis 里写入关注数据
+    2. 这里不考虑极端场景，如 redis 中数据丢失
+     */
     LoginUserInfo loginUserInfo = LoginInterceptor.USER_THREAD_LOCAL.get();
     String key = SocialCacheKeyConstant.USER_FOLLOWER_PREFIX + attentionUserId;
     Boolean isExist = redisCache.isMemberOfZSet(key, String.valueOf(loginUserInfo.getId()));
     if (isExist) {
-      log.info("用户id: {} 是博主id: {} 的粉丝", loginUserInfo.getId(), attentionUserId);
-      return true;
-    }
-    UserFollower userFollower =
-        userFollowerMapper.selectOne(
-            new LambdaQueryWrapper<UserFollower>()
-                .eq(UserFollower::getUserId, attentionUserId)
-                .eq(UserFollower::getFollowerId, loginUserInfo.getId()));
-    if (userFollower != null) {
       log.info("用户id: {} 是博主id: {} 的粉丝", loginUserInfo.getId(), attentionUserId);
       return true;
     }

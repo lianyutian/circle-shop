@@ -74,6 +74,48 @@ public class RedisCache {
    *
    * @param key key
    * @param value value
+   */
+  public void set(String key, String value) {
+    ValueOperations<String, String> op = redisTemplate.opsForValue();
+    try {
+      // 永不过期
+      op.set(key, value);
+    } catch (Exception e) {
+      log.error("写入缓存失败, key: {}, value: [REDACTED]", key, e);
+      throw new RedisCacheException("写入缓存失败", e);
+    }
+  }
+
+  /**
+   * 写入缓存
+   *
+   * @param key key
+   * @param value value
+   * @param timeOut 设置过期时间
+   */
+  public void set(String key, String value, long timeOut) {
+    ValueOperations<String, String> op = redisTemplate.opsForValue();
+    try {
+      if (timeOut > 0) {
+        // 设置缓存时间
+        op.set(key, value, timeOut, TimeUnit.MILLISECONDS);
+      } else if (timeOut == 0) {
+        // 永不过期
+        op.set(key, value);
+      } else {
+        throw new IllegalArgumentException("Expiration time must be a non-negative integer");
+      }
+    } catch (Exception e) {
+      log.error("写入缓存失败, key: {}, value: [REDACTED]", key, e);
+      throw new RedisCacheException("写入缓存失败", e);
+    }
+  }
+
+  /**
+   * 写入缓存
+   *
+   * @param key key
+   * @param value value
    * @param timeOut 设置过期时间
    * @param timeUnit 时间类型
    */
