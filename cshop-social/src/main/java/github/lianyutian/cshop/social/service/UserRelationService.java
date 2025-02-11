@@ -46,4 +46,12 @@ public interface UserRelationService {
    * @return 粉丝列表
    */
   Set<UserFollowerListVO> getFollowerList(Long userId, Integer start);
+
+  /**
+   * 判断是否关注
+   *
+   * @param attentionUserId 关注用户id
+   * @return 是否关注
+   */
+  Boolean isFollower(Long attentionUserId);
 }

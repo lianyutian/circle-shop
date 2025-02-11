@@ -1,5 +1,6 @@
 package github.lianyutian.cshop.social.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import github.lianyutian.cshop.common.enums.BizCodeEnum;
 import github.lianyutian.cshop.common.interceptor.LoginInterceptor;
 import github.lianyutian.cshop.common.model.ApiResult;
@@ -11,6 +12,7 @@ import github.lianyutian.cshop.social.constant.SocialMQConstant;
 import github.lianyutian.cshop.social.enums.SocialMessageType;
 import github.lianyutian.cshop.social.mapper.UserAttentionMapper;
 import github.lianyutian.cshop.social.mapper.UserFollowerMapper;
+import github.lianyutian.cshop.social.model.po.UserFollower;
 import github.lianyutian.cshop.social.model.vo.UserAttentionListVO;
 import github.lianyutian.cshop.social.model.vo.UserFollowerListVO;
 import github.lianyutian.cshop.social.mq.message.UserAttentionUpdateMessage;
@@ -154,6 +156,27 @@ public class UserRelationServiceImpl implements UserRelationService {
     }
     // 从数据库获取粉丝列表
     return getFollowerListFromDB(userId, start, PAGE_SIZE);
+  }
+
+  @Override
+  public Boolean isFollower(Long attentionUserId) {
+    LoginUserInfo loginUserInfo = LoginInterceptor.USER_THREAD_LOCAL.get();
+    String key = SocialCacheKeyConstant.USER_FOLLOWER_PREFIX + attentionUserId;
+    Boolean isExist = redisCache.isMemberOfZSet(key, String.valueOf(loginUserInfo.getId()));
+    if (isExist) {
+      log.info("用户id: {} 是博主id: {} 的粉丝", loginUserInfo.getId(), attentionUserId);
+      return true;
+    }
+    UserFollower userFollower =
+        userFollowerMapper.selectOne(
+            new LambdaQueryWrapper<UserFollower>()
+                .eq(UserFollower::getUserId, attentionUserId)
+                .eq(UserFollower::getFollowerId, loginUserInfo.getId()));
+    if (userFollower != null) {
+      log.info("用户id: {} 是博主id: {} 的粉丝", loginUserInfo.getId(), attentionUserId);
+      return true;
+    }
+    return false;
   }
 
   private Set<UserFollowerListVO> getFollowerListFromDB(long id, int offset, int limit) {

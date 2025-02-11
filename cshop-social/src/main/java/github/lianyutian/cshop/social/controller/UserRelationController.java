@@ -76,4 +76,15 @@ public class UserRelationController {
     Set<UserFollowerListVO> attentionList = userRelationService.getFollowerList(userId, start);
     return ApiResult.success(attentionList);
   }
+
+  /**
+   * 判断是否关注
+   *
+   * @param attentionUserId 关注用户id
+   * @return ApiResult
+   */
+  @PostMapping("isFollower")
+  public ApiResult<Boolean> isFollower(@RequestParam("userId") Long attentionUserId) {
+    return ApiResult.success(userRelationService.isFollower(attentionUserId));
+  }
 }
