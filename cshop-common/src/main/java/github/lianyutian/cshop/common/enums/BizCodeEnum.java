@@ -70,7 +70,13 @@ public enum BizCodeEnum {
   NOTE_DEL_FAIL(2104003, "删除笔记失败"),
   NOTE_UPDATE_FAIL(2102004, "笔记更新失败"),
   NOTE_UPDATE_LOCK_FAIL(2104006, "修改笔记信息获取锁失败"),
-  NOTE_INFO_LOCK_FAIL(2102007, "读取笔记信息获取锁失败");
+  NOTE_INFO_LOCK_FAIL(2102007, "读取笔记信息获取锁失败"),
+
+  /** 购物车微服务评论相关 9101 开头 */
+  CART_SKU_COUNT_THRESHOLD_ERROR(9101001, "购物车商品数量达到上限"),
+  CART_SKU_SELL_STATUS_ERROR(9101002, "该商品目前未开放销售"),
+  CART_SKU_NOT_EXIST_ERROR(9101003, "购物车中没有该商品"),
+  CART_SKU_PERSISTENCE_ERROR(9101004, "购物车商品持久化失败");
 
   /** 错误信息 */
   private final String message;

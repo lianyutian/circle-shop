@@ -1,10 +1,10 @@
 # 服务端口
 server:
-  port: 9004
+  port: 9999
 
 spring:
   application:
-    name: cshop-social
+    name: cshop-cart
   # mysql配置
   datasource:
     username: root

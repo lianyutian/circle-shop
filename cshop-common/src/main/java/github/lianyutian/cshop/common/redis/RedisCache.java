@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -399,7 +400,7 @@ public class RedisCache {
    * @param key key
    * @param value value
    */
-  public void addToZSet(String key, String value) {
+  public void zAdd(String key, String value) {
     try {
       ZSetOperations<String, String> zSetOperations = redisTemplate.opsForZSet();
       double score = System.currentTimeMillis();
@@ -473,6 +474,73 @@ public class RedisCache {
     } catch (Exception e) {
       log.error("Failed to get set for key: {}", key, e);
       throw new RedisCacheException("Failed to get set for key: " + key, e);
+    }
+  }
+
+  /**
+   * 获取 Hash 集合大小
+   *
+   * @param key key
+   * @return key对应的Hash集合大小
+   */
+  public Long getHashSize(String key) {
+    try {
+      HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
+      return hashOperations.size(key);
+    } catch (Exception e) {
+      log.error("Failed to get set for key: {}", key, e);
+      throw new RedisCacheException("Failed to get set for key: " + key, e);
+    }
+  }
+
+  /**
+   * 判断 Hash 集合中是否存在该字段
+   *
+   * @param key key
+   * @param hashKey hashKey
+   * @return Boolean
+   */
+  public Boolean isFiledExistOfHash(String key, String hashKey) {
+    try {
+      HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
+      return hashOperations.hasKey(key, hashKey);
+    } catch (Exception e) {
+      log.error("Failed to get set for key: {}, hashKey: {}", key, hashKey, e);
+      throw new RedisCacheException("Failed to get set for key: " + key + "hashKey: " + hashKey, e);
+    }
+  }
+
+  /**
+   * Hash 集合中获取值
+   *
+   * @param key key
+   * @param hashKey hashKey
+   * @return String
+   */
+  public String hGet(String key, String hashKey) {
+    try {
+      HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
+      return hashOperations.get(key, hashKey);
+    } catch (Exception e) {
+      log.error("Failed to get set for key: {}, hashKey: {}", key, hashKey, e);
+      throw new RedisCacheException("Failed to get set for key: " + key + "hashKey: " + hashKey, e);
+    }
+  }
+
+  /**
+   * Hash 集合中添加值
+   *
+   * @param key key
+   * @param hashKey hashKey
+   * @param value value
+   */
+  public void hPut(String key, String hashKey, String value) {
+    try {
+      HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
+      hashOperations.put(key, hashKey, value);
+    } catch (Exception e) {
+      log.error("Failed to get set for key: {}, hashKey: {}", key, hashKey, e);
+      throw new RedisCacheException("Failed to get set for key: " + key + "hashKey: " + hashKey, e);
     }
   }
 }

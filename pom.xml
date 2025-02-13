@@ -13,6 +13,7 @@
         <module>cshop-user</module>
         <module>cshop-note</module>
         <module>cshop-social</module>
+        <module>chsop-cart</module>
     </modules>
 
     <properties>
@@ -56,6 +57,8 @@
         <rocketmq-starter.version>2.2.1</rocketmq-starter.version>
         <!-- hutool工具 版本 -->
         <hutool.version>5.8.25</hutool.version>
+        <!-- mapstruct工具 版本 -->
+        <mapstruct.version>1.6.3</mapstruct.version>
     </properties>
 
     <dependencyManagement>
@@ -153,6 +156,16 @@
                 <groupId>cn.hutool</groupId>
                 <artifactId>hutool-all</artifactId>
                 <version>${hutool.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct-processor</artifactId>
+                <version>${mapstruct.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct</artifactId>
+                <version>${mapstruct.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

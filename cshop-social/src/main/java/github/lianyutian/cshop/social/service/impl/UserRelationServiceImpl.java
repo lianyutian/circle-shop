@@ -80,7 +80,7 @@ public class UserRelationServiceImpl implements UserRelationService {
         loginUserInfo.getId(),
         attentionUserId,
         attentionUserId);
-    redisCache.addToZSet(attentionKey, String.valueOf(attentionUserId));
+    redisCache.zAdd(attentionKey, String.valueOf(attentionUserId));
     publishAttentionEvent(loginUserInfo.getId(), attentionUserId);
 
     // 添加用户为被关注用户的粉丝
@@ -90,7 +90,7 @@ public class UserRelationServiceImpl implements UserRelationService {
         attentionUserId,
         loginUserInfo.getId(),
         loginUserInfo.getId());
-    redisCache.addToZSet(followerKey, String.valueOf(loginUserInfo.getId()));
+    redisCache.zAdd(followerKey, String.valueOf(loginUserInfo.getId()));
     publishFollowerEvent(loginUserInfo.getId(), attentionUserId);
     return ApiResult.result(BizCodeEnum.USER_ATTENTION_SUCCESS);
   }
