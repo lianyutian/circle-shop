@@ -7,9 +7,11 @@ import github.lianyutian.cshop.cart.conver.CartSkuInfoVOToCartConverter;
 import github.lianyutian.cshop.cart.enums.CartMessageType;
 import github.lianyutian.cshop.cart.enums.CheckStatusEnum;
 import github.lianyutian.cshop.cart.model.entity.SkuInfoEntity;
-import github.lianyutian.cshop.cart.model.param.CartAddParam;
+import github.lianyutian.cshop.cart.model.param.CartDeleteParam;
+import github.lianyutian.cshop.cart.model.param.CartUpdateParam;
 import github.lianyutian.cshop.cart.model.po.Cart;
 import github.lianyutian.cshop.cart.model.vo.CartSkuInfoVO;
+import github.lianyutian.cshop.cart.mq.message.CartDeleteMessage;
 import github.lianyutian.cshop.cart.mq.producer.CartDefaultProducer;
 import github.lianyutian.cshop.cart.service.CartService;
 import github.lianyutian.cshop.common.enums.BizCodeEnum;
@@ -20,10 +22,12 @@ import github.lianyutian.cshop.common.redis.RedisCache;
 import github.lianyutian.cshop.common.utils.CommonUtil;
 import github.lianyutian.cshop.common.utils.JsonUtil;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author lianyutian
@@ -40,9 +44,9 @@ public class CartServiceImpl implements CartService {
   private final CartSkuInfoVOToCartConverter cartSkuInfoVOToCartConverter;
 
   @Override
-  public void addCart(CartAddParam cartAddParam) {
+  public void updateCart(CartUpdateParam cartUpdateParam) {
     // 1、构造购物车商品数据
-    CartSkuInfoVO cartSkuInfoVO = buildCartSkuInfo(cartAddParam);
+    CartSkuInfoVO cartSkuInfoVO = buildCartSkuInfo(cartUpdateParam);
 
     // 2、校验商品是否可售: 库存、上下架状态 TODO 等商品服务构建后完善
     // 购物车是否达到最大限制等
@@ -60,22 +64,40 @@ public class CartServiceImpl implements CartService {
     sendAsyncUpdateMessage(cartSkuInfoVO);
   }
 
+  @Override
+  public void deleteCart(CartDeleteParam cartDeleteParam) {
+    // 1、获取用户登录信息 这里还是通过 ThreadLocal 进行获取
+    LoginUserInfo loginUserInfo = LoginInterceptor.USER_THREAD_LOCAL.get();
+
+    if (CollectionUtils.isEmpty(cartDeleteParam.getSkuIdList())) {
+      throw new BizException(BizCodeEnum.COMMON_PARAM_ERROR);
+    }
+
+    // 2、清空缓存
+    for (Long skuId : cartDeleteParam.getSkuIdList()) {
+      clearCartCache(loginUserInfo.getId(), skuId);
+    }
+
+    // 4、发送删除购物车商品消息
+    sendAsyncDeleteMessage(loginUserInfo.getId(), cartDeleteParam.getSkuIdList());
+  }
+
   /**
    * 构造购物车商品数据
    *
-   * @param cartAddParam cartAddParam
+   * @param cartUpdateParam cartAddParam
    * @return CartSkuInfoVO
    */
-  private CartSkuInfoVO buildCartSkuInfo(CartAddParam cartAddParam) {
+  private CartSkuInfoVO buildCartSkuInfo(CartUpdateParam cartUpdateParam) {
     // 获取商品数据 TODO 待商品服务完成后完善
-    SkuInfoEntity skuInfo = getSkuInfo(cartAddParam.getSkuId());
+    SkuInfoEntity skuInfo = getSkuInfo(cartUpdateParam.getSkuId());
 
     // 获取用户登录信息 这里还是通过 ThreadLocal 进行获取
     // TODO 后续使用 Redis 分布式缓存替代
     LoginUserInfo loginUser = LoginInterceptor.USER_THREAD_LOCAL.get();
     // 返回构造数据
     return CartSkuInfoVO.builder()
-        .skuId(cartAddParam.getSkuId())
+        .skuId(cartUpdateParam.getSkuId())
         .userId(loginUser.getId())
         .title(skuInfo.getSkuName())
         .price(skuInfo.getPrice())
@@ -83,8 +105,8 @@ public class CartServiceImpl implements CartService {
         .updateTime(skuInfo.getUpdateTime())
         .checkStatus(CheckStatusEnum.NO_CHECKED.getCode())
         .buyCount(
-            cartAddParam.getBuyCount() != null
-                ? cartAddParam.getBuyCount()
+            cartUpdateParam.getBuyCount() != null
+                ? cartUpdateParam.getBuyCount()
                 : CartConstant.DEFAULT_ADD_CART_SKU_COUNT)
         .build();
   }
@@ -286,8 +308,50 @@ public class CartServiceImpl implements CartService {
 
     cartDefaultProducer.sendMessage(
         CartMQConstant.CART_ASYNC_PERSISTENCE_TOPIC,
-        CartMessageType.CART_ADD.getType(),
+        CartMessageType.CART_UPDATE.getType(),
         JsonUtil.toJson(cart),
-        CartMessageType.CART_ADD);
+        CartMessageType.CART_UPDATE);
+  }
+
+  /**
+   * 更新购物车请求数量为 0，删除缓存
+   *
+   * @param userId userId
+   * @param skuId skuId
+   */
+  private void clearCartCache(Long userId, Long skuId) {
+    String newSkuId = String.valueOf(skuId);
+    // 删除购物车 sku 数量缓存
+    redisCache.hDel(CartCacheKeyConstant.SHOPPING_CART_COUNT_PREFIX + userId, newSkuId);
+    // 删除购物车 sku 扩展信息缓存
+    redisCache.hDel(CartCacheKeyConstant.SHOPPING_CART_EXTRA_PREFIX + userId, newSkuId);
+    // 删除购物车 sku 操作时间缓存
+    redisCache.zRemove(CartCacheKeyConstant.SHOPPING_CART_SORT_PREFIX + userId, newSkuId);
+  }
+
+  /**
+   * 发布购物车异步变更消息事件
+   *
+   * @param userId userId
+   * @param skuIdList skuIdList
+   */
+  private void sendAsyncDeleteMessage(Long userId, List<Long> skuIdList) {
+
+    // 发送消息到MQ
+    log.info(
+        "发送购物车 sku 删除消息到 MQ, topic: {}, userId: {}, sukIdList: {}",
+        CartMQConstant.CART_ASYNC_PERSISTENCE_TOPIC,
+        userId,
+        JsonUtil.toJson(skuIdList));
+
+    CartDeleteMessage cartDeleteMessage = new CartDeleteMessage();
+    cartDeleteMessage.setUserId(userId);
+    cartDeleteMessage.setSkuIdList(skuIdList);
+
+    cartDefaultProducer.sendMessage(
+        CartMQConstant.CART_ASYNC_PERSISTENCE_TOPIC,
+        CartMessageType.CART_DELETE.getType(),
+        JsonUtil.toJson(cartDeleteMessage),
+        CartMessageType.CART_DELETE);
   }
 }

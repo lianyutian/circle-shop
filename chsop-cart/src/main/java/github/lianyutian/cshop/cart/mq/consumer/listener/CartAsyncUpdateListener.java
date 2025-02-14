@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 用户关注监听
+ * 购物车sku更新消息监听
  *
  * @author lianyutian
  * @since 2025-01-21 14:11:58

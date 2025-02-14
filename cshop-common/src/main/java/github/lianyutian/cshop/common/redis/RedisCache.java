@@ -478,6 +478,22 @@ public class RedisCache {
   }
 
   /**
+   * 删除 zset 集合中的元素
+   *
+   * @param key key
+   * @param member member
+   */
+  public void zRemove(String key, String member) {
+    try {
+      ZSetOperations<String, String> zSetOperations = redisTemplate.opsForZSet();
+      zSetOperations.remove(key, member);
+    } catch (Exception e) {
+      log.error("Failed to zRemove for key: {}, member: {}", key, member, e);
+      throw new RedisCacheException("Failed to zRemove for key: " + key + "member: " + member, e);
+    }
+  }
+
+  /**
    * 获取 Hash 集合大小
    *
    * @param key key
@@ -538,6 +554,22 @@ public class RedisCache {
     try {
       HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
       hashOperations.put(key, hashKey, value);
+    } catch (Exception e) {
+      log.error("Failed to get set for key: {}, hashKey: {}", key, hashKey, e);
+      throw new RedisCacheException("Failed to get set for key: " + key + "hashKey: " + hashKey, e);
+    }
+  }
+
+  /**
+   * Hash 集合中删除值
+   *
+   * @param key key
+   * @param hashKey hashKey
+   */
+  public void hDel(String key, String hashKey) {
+    try {
+      HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
+      hashOperations.delete(key, hashKey);
     } catch (Exception e) {
       log.error("Failed to get set for key: {}, hashKey: {}", key, hashKey, e);
       throw new RedisCacheException("Failed to get set for key: " + key + "hashKey: " + hashKey, e);

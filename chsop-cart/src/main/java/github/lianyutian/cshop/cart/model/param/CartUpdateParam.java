@@ -1,24 +1,15 @@
 package github.lianyutian.cshop.cart.model.param;
 
 import jakarta.validation.constraints.Min;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
- * 添加购物车入参
- *
  * @author lianyutian
- * @since 2025-02-12 15:48:19
+ * @since 2025-02-13 14:45:44
  * @version 1.0
  */
 @Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-public class CartAddParam {
-
+public class CartUpdateParam {
   /** 用户 id：加入到哪个用户的购物车里去 */
   private Long userId;
 

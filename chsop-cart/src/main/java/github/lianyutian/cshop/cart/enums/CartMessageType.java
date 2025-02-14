@@ -9,7 +9,7 @@ import lombok.Getter;
  */
 @Getter
 public enum CartMessageType {
-  CART_ADD("CART_ADD", "购物车新增商品"),
+  CART_UPDATE("CART_UPDATE", "购物车新增商品"),
   CART_DELETE("CART_DELETE", "购物车删除商品");
 
   private final String type;

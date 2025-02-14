@@ -1,6 +1,7 @@
 package github.lianyutian.cshop.cart.service;
 
-import github.lianyutian.cshop.cart.model.param.CartAddParam;
+import github.lianyutian.cshop.cart.model.param.CartDeleteParam;
+import github.lianyutian.cshop.cart.model.param.CartUpdateParam;
 
 /**
  * CartService
@@ -11,9 +12,16 @@ import github.lianyutian.cshop.cart.model.param.CartAddParam;
  */
 public interface CartService {
   /**
-   * 添加购物车
+   * 更新购物车
    *
-   * @param cartAddParam 购物车入参
+   * @param cartUpdateParam 购物车入参
    */
-  void addCart(CartAddParam cartAddParam);
+  void updateCart(CartUpdateParam cartUpdateParam);
+
+  /**
+   * 删除购物车
+   *
+   * @param cartDeleteParam cartDeleteParam
+   */
+  void deleteCart(CartDeleteParam cartDeleteParam);
 }
