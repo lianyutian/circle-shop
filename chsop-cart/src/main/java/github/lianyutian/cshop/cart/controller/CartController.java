@@ -2,10 +2,12 @@ package github.lianyutian.cshop.cart.controller;
 
 import github.lianyutian.cshop.cart.model.param.CartDeleteParam;
 import github.lianyutian.cshop.cart.model.param.CartUpdateParam;
+import github.lianyutian.cshop.cart.model.vo.CartListVO;
 import github.lianyutian.cshop.cart.service.CartService;
 import github.lianyutian.cshop.common.model.ApiResult;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -54,5 +56,24 @@ public class CartController {
     log.info("删除购物车, skuId: {}", cartDeleteParam.getSkuIdList());
     cartService.deleteCart(cartDeleteParam);
     return ApiResult.success();
+  }
+
+  /**
+   * 清空购物车
+   *
+   * @return ApiResult
+   */
+  @GetMapping("clearCart")
+  public ApiResult<Void> clearCart() {
+    log.info("清空购物车");
+    cartService.clearCart();
+    return ApiResult.success();
+  }
+
+  @GetMapping("listCart")
+  public ApiResult<CartListVO> listCart() {
+    log.info("获取购物车列表");
+    CartListVO cartListVO = cartService.listCart();
+    return ApiResult.success(cartListVO);
   }
 }

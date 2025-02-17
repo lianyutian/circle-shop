@@ -25,4 +25,11 @@ public interface CartSkuInfoVOToCartConverter {
     @Mapping(target = "createUser", source = "userId")
   })
   Cart toPO(CartSkuInfoVO cartSkuInfoVO);
+
+  @Mappings({
+    @Mapping(target = "price", source = "skuPrice"),
+    @Mapping(target = "buyCount", source = "skuCount"),
+    @Mapping(target = "userId", source = "createUser")
+  })
+  CartSkuInfoVO toVO(Cart cart);
 }

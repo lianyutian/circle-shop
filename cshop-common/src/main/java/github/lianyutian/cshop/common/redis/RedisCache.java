@@ -4,6 +4,7 @@ import github.lianyutian.cshop.common.utils.CommonUtil;
 import github.lianyutian.cshop.common.utils.JsonUtil;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
@@ -412,6 +413,22 @@ public class RedisCache {
   }
 
   /**
+   * 添加到集合
+   *
+   * @param key key
+   * @param value value
+   */
+  public void zAdd(String key, String value, double score) {
+    try {
+      ZSetOperations<String, String> zSetOperations = redisTemplate.opsForZSet();
+      zSetOperations.add(key, value, score);
+    } catch (Exception e) {
+      log.error("Failed to add value to set for key: {}", key, e);
+      throw new RedisCacheException("Failed to add value to set for key: " + key, e);
+    }
+  }
+
+  /**
    * 从集合中移除
    *
    * @param key key
@@ -561,6 +578,22 @@ public class RedisCache {
   }
 
   /**
+   * 以 map 集合的形式添加 hash 键值对
+   *
+   * @param key key
+   * @param map map
+   */
+  public void hPutAll(String key, Map<String, String> map) {
+    try {
+      HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
+      hashOperations.putAll(key, map);
+    } catch (Exception e) {
+      log.error("Failed to hPutAll key: {}", key, e);
+      throw new RedisCacheException("Failed to hPutAll for key: " + key, e);
+    }
+  }
+
+  /**
    * Hash 集合中删除值
    *
    * @param key key
@@ -573,6 +606,20 @@ public class RedisCache {
     } catch (Exception e) {
       log.error("Failed to get set for key: {}, hashKey: {}", key, hashKey, e);
       throw new RedisCacheException("Failed to get set for key: " + key + "hashKey: " + hashKey, e);
+    }
+  }
+
+  /**
+   * 删除 key
+   *
+   * @param key key
+   */
+  public void del(String key) {
+    try {
+      redisTemplate.delete(key);
+    } catch (Exception e) {
+      log.error("Failed to delete for key: {}", key, e);
+      throw new RedisCacheException("Failed to delete for key: " + key, e);
     }
   }
 }

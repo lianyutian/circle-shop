@@ -2,6 +2,7 @@ package github.lianyutian.cshop.cart.service;
 
 import github.lianyutian.cshop.cart.model.param.CartDeleteParam;
 import github.lianyutian.cshop.cart.model.param.CartUpdateParam;
+import github.lianyutian.cshop.cart.model.vo.CartListVO;
 
 /**
  * CartService
@@ -24,4 +25,14 @@ public interface CartService {
    * @param cartDeleteParam cartDeleteParam
    */
   void deleteCart(CartDeleteParam cartDeleteParam);
+
+  /** 清空购物车 */
+  void clearCart();
+
+  /**
+   * 获取购物车列表
+   *
+   * @return CartListVO
+   */
+  CartListVO listCart();
 }

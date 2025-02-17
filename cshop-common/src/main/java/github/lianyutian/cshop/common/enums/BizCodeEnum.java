@@ -76,7 +76,8 @@ public enum BizCodeEnum {
   CART_SKU_COUNT_THRESHOLD_ERROR(9101001, "购物车商品数量达到上限"),
   CART_SKU_SELL_STATUS_ERROR(9101002, "该商品目前未开放销售"),
   CART_SKU_NOT_EXIST_ERROR(9101003, "购物车中没有该商品"),
-  CART_SKU_PERSISTENCE_ERROR(9101004, "购物车商品持久化失败");
+  CART_SKU_PERSISTENCE_ERROR(9101004, "购物车商品持久化失败"),
+  CART_SKU_CHANGE_LOCK_FAIL(9101005, "购物车修改商品获取锁失败");
 
   /** 错误信息 */
   private final String message;
