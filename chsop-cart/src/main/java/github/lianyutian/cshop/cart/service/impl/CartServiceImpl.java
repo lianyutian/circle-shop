@@ -32,7 +32,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -151,8 +150,8 @@ public class CartServiceImpl implements CartService {
       return null;
     }
 
-    Set<CartSkuInfoVO> cartSkuInfoVOList =
-        cartList.stream().map(cartSkuInfoVOToCartConverter::toVO).collect(Collectors.toSet());
+    List<CartSkuInfoVO> cartSkuInfoVOList =
+        cartList.stream().map(cartSkuInfoVOToCartConverter::toVO).toList();
 
     // 更新 Redis 缓存中的购物车商品
     updateCartCacheFromDB(userId, cartSkuInfoVOList);
@@ -161,7 +160,7 @@ public class CartServiceImpl implements CartService {
         cartSkuInfoVOList, userId, "queryFromDB billingInfoVo:{}, skuList:{}, disabledSkuList:{}");
   }
 
-  private void updateCartCacheFromDB(long userId, Set<CartSkuInfoVO> cartSkuInfoVOList) {
+  private void updateCartCacheFromDB(long userId, List<CartSkuInfoVO> cartSkuInfoVOList) {
     // 数量信息 hash
     Map<String, String> cartNumsMap = new HashMap<>();
     // 扩展信息hash
@@ -196,7 +195,7 @@ public class CartServiceImpl implements CartService {
         JsonUtil.toJson(cartExtrasMap));
   }
 
-  private CartListVO getCartListVO(Set<CartSkuInfoVO> cartSkuInfoVOList, long userId, String s) {
+  private CartListVO getCartListVO(List<CartSkuInfoVO> cartSkuInfoVOList, long userId, String s) {
     // 构建未失效的商品列表
     List<CartSkuInfoVO> skuList = new ArrayList<>();
     // 构建失效的商品列表
@@ -220,7 +219,7 @@ public class CartServiceImpl implements CartService {
 
   private CartListVO queryFromCache(Long userId) {
 
-    Set<CartSkuInfoVO> totalSkuList = getListCartFromCache(userId);
+    List<CartSkuInfoVO> totalSkuList = getListCartFromCache(userId);
     if (CollectionUtils.isEmpty(totalSkuList)) {
       return null;
     }
@@ -298,11 +297,11 @@ public class CartServiceImpl implements CartService {
   }
 
   private void splitCartSkuList(
-      Set<CartSkuInfoVO> totalSkuSet,
+      List<CartSkuInfoVO> totalSkuList,
       List<CartSkuInfoVO> skuList,
       List<CartSkuInfoVO> disabledSkuList) {
     // 遍历全部的购物车商品集合
-    for (CartSkuInfoVO cartSkuInfoVo : totalSkuSet) {
+    for (CartSkuInfoVO cartSkuInfoVo : totalSkuList) {
       // 进行商品校验，是否可售等
       Boolean saleable = getSkuSaleableStatus(cartSkuInfoVo);
       if (saleable) {
@@ -314,17 +313,18 @@ public class CartServiceImpl implements CartService {
     log.info("splitCartSkuList skuList:{}, disabledSkuList:{}", skuList, disabledSkuList);
   }
 
-  private Set<CartSkuInfoVO> getListCartFromCache(Long userId) {
-    Set<String> skuExtraSet =
-        redisCache.listZSet(CartCacheKeyConstant.SHOPPING_CART_EXTRA_PREFIX + userId);
-    if (CollectionUtils.isEmpty(skuExtraSet)) {
+  private List<CartSkuInfoVO> getListCartFromCache(Long userId) {
+    List<String> skuExtraList =
+        redisCache.hGetAll(CartCacheKeyConstant.SHOPPING_CART_EXTRA_PREFIX + userId);
+    if (CollectionUtils.isEmpty(skuExtraList)) {
       return null;
     }
-    return skuExtraSet.stream()
+
+    return skuExtraList.stream()
         .filter(StringUtils::isNotEmpty)
         .filter(skuId -> !skuId.equals(CartConstant.EMPTY_CACHE_IDENTIFY))
         .map(extra -> JsonUtil.fromJson(extra, CartSkuInfoVO.class))
-        .collect(Collectors.toSet());
+        .toList();
   }
 
   /**

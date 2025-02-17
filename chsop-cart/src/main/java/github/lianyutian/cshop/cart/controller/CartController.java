@@ -70,6 +70,11 @@ public class CartController {
     return ApiResult.success();
   }
 
+  /**
+   * 购物车列表
+   *
+   * @return ApiResult<CartListVO>
+   */
   @GetMapping("listCart")
   public ApiResult<CartListVO> listCart() {
     log.info("获取购物车列表");

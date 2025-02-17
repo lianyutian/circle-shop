@@ -561,6 +561,22 @@ public class RedisCache {
   }
 
   /**
+   * Hash 集合中获取所有值
+   *
+   * @param key key
+   * @return values
+   */
+  public List<String> hGetAll(String key) {
+    try {
+      HashOperations<String, String, String> hashOperations = redisTemplate.opsForHash();
+      return hashOperations.values(key);
+    } catch (Exception e) {
+      log.error("Failed to hGetAll for key: {}", key, e);
+      throw new RedisCacheException("Failed to hGetAll for key: " + key, e);
+    }
+  }
+
+  /**
    * Hash 集合中添加值
    *
    * @param key key

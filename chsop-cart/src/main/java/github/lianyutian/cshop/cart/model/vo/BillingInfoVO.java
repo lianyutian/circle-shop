@@ -1,6 +1,7 @@
 package github.lianyutian.cshop.cart.model.vo;
 
 import lombok.Builder;
+import lombok.Data;
 
 /**
  * 购物车结算价格信息
@@ -10,6 +11,7 @@ import lombok.Builder;
  * @version 1.0
  */
 @Builder
+@Data
 public class BillingInfoVO {
 
   /** 合计金额 */
