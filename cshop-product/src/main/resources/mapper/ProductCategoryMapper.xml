@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="github.lianyutian.cshop.product.mapper.ProductCategoryMapper">
+
+    <resultMap id="BaseResultMap" type="github.lianyutian.cshop.product.model.po.ProductCategory">
+        <id property="id" column="id" jdbcType="INTEGER"/>
+        <result property="parentId" column="parent_id" jdbcType="INTEGER"/>
+        <result property="name" column="name" jdbcType="VARCHAR"/>
+        <result property="alias" column="alias" jdbcType="VARCHAR"/>
+        <result property="isEnable" column="is_enable" jdbcType="TINYINT"/>
+        <result property="level" column="level" jdbcType="INTEGER"/>
+        <result property="isDeleted" column="is_deleted" jdbcType="TINYINT"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+
+    <resultMap id="LevelResultMap" type="github.lianyutian.cshop.product.model.vo.ProductCategoryLevel2VO">
+        <result column="c1_id" property="id"/>
+        <result column="c1_name" property="name"/>
+        <result column="c1_alias" property="alias"/>
+        <result column="c1_level" property="level"/>
+        <result column="c1_parent_id" property="parentId"/>
+        <result column="c2_id" property="id2"/>
+        <result column="c2_name" property="name2"/>
+        <result column="c2_alias" property="alias2"/>
+        <result column="c2_level" property="level2"/>
+        <result column="c2_parent_id" property="parentId2"/>
+        <result column="c3_id" property="id3"/>
+        <result column="c3_name" property="name3"/>
+        <result column="c3_alias" property="alias3"/>
+        <result column="c3_level" property="level3"/>
+        <result column="c3_parent_id" property="parentId3"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,parent_id,name,
+        alias,is_enable,level,
+        is_deleted,create_time,update_time
+    </sql>
+    <select id="listByCategoryId"
+            resultMap="LevelResultMap">
+        SELECT c1.id        AS c1_id,
+               c1.name      AS c1_name,
+               c1.alias     AS c1_alias,
+               c1.level     AS c1_level,
+               c1.parent_id AS c1_parent_id,
+               c2.id        AS c2_id,
+               c2.name      AS c2_name,
+               c2.alias     AS c2_alias,
+               c2.level     AS c2_level,
+               c2.parent_id AS c2_parent_id,
+               c3.id        AS c3_id,
+               c3.name      AS c3_name,
+               c3.alias     AS c3_alias,
+               c3.level     AS c3_level,
+               c2.parent_id AS c3_parent_id
+        FROM product_category c1
+                 INNER JOIN product_category c2 ON c2.parent_id = c1.id
+                 LEFT JOIN product_category c3 ON c3.parent_id = c2.id
+        WHERE c1.id = #{categoryId};
+    </select>
+</mapper>
