@@ -89,6 +89,26 @@ public class RedisCache {
   }
 
   /**
+   * 写入缓存当 key 不存在时
+   *
+   * @param key key
+   * @param value value
+   */
+  public Boolean setIfAbsent(String key, String value, long timeOut) {
+    ValueOperations<String, String> op = redisTemplate.opsForValue();
+    try {
+      if (timeOut > 0) {
+        return op.setIfAbsent(key, value, timeOut, TimeUnit.MILLISECONDS);
+      } else {
+        return op.setIfAbsent(key, value);
+      }
+    } catch (Exception e) {
+      log.error("写入缓存失败, key: {}, value: [REDACTED]", key, e);
+      throw new RedisCacheException("写入缓存失败", e);
+    }
+  }
+
+  /**
    * 写入缓存
    *
    * @param key key

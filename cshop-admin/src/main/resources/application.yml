@@ -1,0 +1,57 @@
+# 服务端口
+server:
+  port: 9010
+
+spring:
+  application:
+    name: cshop-admin
+  # mysql配置
+  datasource:
+    username: root
+    password: MIIEowIBAAKCAQEAwG90ULRHmAXFXQzZSwleoYts2+bCzUvqhhqtGiv/F5kUsETY
+    url: jdbc:mysql://116.198.217.158:3306/cshop-user?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  # redis配置
+  data:
+    redis:
+      host: 116.198.217.158
+      port: 6379
+      password: MIIEowIBAAKCAQEAwG90ULRHmAXFXQzZSwleoYts2+bCzUvqhhqtGiv/F5kUsETY  # 如果有密码
+      database: 0  # 默认数据库
+      timeout: 60000 # 读取 redis 超时时间
+      lettuce:
+        pool:
+          max-active: 100      # 最大连接数
+          max-idle: 100        # 最大空闲连接数
+          min-idle: 100        # 最小空闲连接数
+          max-wait: 60000      # 最大等待时间，单位是毫秒
+# 短信配置
+sms:
+  aliyun:
+    secretId: xxx
+    secretKey: xxx
+    signName: CircleShop商城
+  tencent:
+    secretId: xxx
+    secretKey: xxx
+    signName: xxx
+  send:
+    fail: 10
+    templateId:
+      aliyun: SMS_476800055
+      tencentcloud: xxx
+# 对象存储配置
+oss:
+  aliyun:
+    secretId: xxx
+    secretKey: xxx
+    bucketName: xxx
+    endPoint: oss-cn-shenzhen.aliyuncs.com
+# 设置日志级别：ERROR/WARN/INFO/DEBUG,默认是 INFO 以上才显示
+logging:
+  level:
+    root: INFO
+# 配置 mybatis plus 打印 sql 日志
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

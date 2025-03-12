@@ -15,6 +15,7 @@
         <module>cshop-social</module>
         <module>chsop-cart</module>
         <module>cshop-product</module>
+        <module>cshop-admin</module>
     </modules>
 
     <properties>
